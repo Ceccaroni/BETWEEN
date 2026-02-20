@@ -9,7 +9,30 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.createLoadingBar();
+
+    // Branding
     this.load.image('ceccaroni-logo', 'assets/branding/ceccaroni-games.png');
+
+    // Player spritesheet (8 cols x 13 rows, 40x32 per frame)
+    this.load.spritesheet('player-blue', 'assets/characters/player/player-blue.png', {
+      frameWidth: 40,
+      frameHeight: 32,
+    });
+
+    // Machine tileset (37 cols x 23 rows, 32x32)
+    this.load.image('machine-tileset', 'assets/tilesets/machine/tileset.png');
+
+    // Props spritesheet (24 cols x 22 rows, 32x32)
+    this.load.spritesheet('machine-props', 'assets/props/machine/props.png', {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
+
+    // Projectiles (5 cols x 9 rows, 32x32)
+    this.load.spritesheet('projectiles', 'assets/effects/projectiles/projectiles.png', {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
   }
 
   create(): void {

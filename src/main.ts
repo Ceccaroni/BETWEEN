@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT } from './utils/Constants';
 import { BootScene } from './scenes/BootScene';
 import { SplashScene } from './scenes/SplashScene';
 import { TitleScene } from './scenes/TitleScene';
+import { MenuScene } from './scenes/MenuScene';
 import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { CreditsScene } from './scenes/CreditsScene';
@@ -24,7 +25,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, SplashScene, TitleScene, GameScene, GameOverScene, CreditsScene, SettingsScene, TestScene],
+  scene: [BootScene, SplashScene, TitleScene, MenuScene, GameScene, GameOverScene, CreditsScene, SettingsScene, TestScene],
 };
 
 new Phaser.Game(config);

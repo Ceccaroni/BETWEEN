@@ -251,7 +251,7 @@ export class SettingsScene extends Phaser.Scene {
   private goBack(): void {
     if (this.leaving) return;
     this.leaving = true;
-    this.scene.start('TitleScene');
+    this.scene.start('MenuScene');
   }
 
   /** Get a setting value from anywhere. */

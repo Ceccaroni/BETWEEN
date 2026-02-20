@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../utils/Constants';
+import { AudioSystem } from '../systems/AudioSystem';
 
-/** Shows the Ceccaroni Games logo with fade-in/hold/fade-out. */
+/** Black pause → Ceccaroni Games logo → fade to TitleScene. Music starts here. */
 export class SplashScene extends Phaser.Scene {
   private skipped = false;
 
@@ -10,12 +11,28 @@ export class SplashScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.skipped = false;
     this.cameras.main.setBackgroundColor('#000000');
 
+    // Start music immediately
+    const audio = new AudioSystem(this);
+    audio.playMusic('title-theme', 3000);
+
+    // Black pause (1.5s) before logo appears
+    this.time.delayedCall(1500, () => {
+      if (this.skipped) return;
+      this.showLogo();
+    });
+
+    // Skip on click or keypress
+    this.input.once('pointerdown', () => this.skip());
+    this.input.keyboard?.once('keydown', () => this.skip());
+  }
+
+  private showLogo(): void {
     const logo = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ceccaroni-logo')
       .setAlpha(0);
 
-    // Scale logo to fit nicely (max 60% of screen height)
     const maxHeight = GAME_HEIGHT * 0.6;
     if (logo.height > maxHeight) {
       logo.setScale(maxHeight / logo.height);
@@ -25,19 +42,15 @@ export class SplashScene extends Phaser.Scene {
     this.tweens.add({
       targets: logo,
       alpha: 1,
-      duration: 500,
+      duration: 800,
       ease: 'Power2',
       onComplete: () => {
-        this.time.delayedCall(2000, () => {
+        this.time.delayedCall(2500, () => {
           if (this.skipped) return;
           this.fadeOut();
         });
       },
     });
-
-    // Skip on click or keypress
-    this.input.once('pointerdown', () => this.skip());
-    this.input.keyboard?.once('keydown', () => this.skip());
   }
 
   private skip(): void {
@@ -47,7 +60,7 @@ export class SplashScene extends Phaser.Scene {
   }
 
   private fadeOut(): void {
-    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.fadeOut(600, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('TitleScene');
     });

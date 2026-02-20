@@ -8,10 +8,7 @@ interface MenuItem {
   action: () => void;
 }
 
-/**
- * Main menu scene with navigable options.
- * Background is a placeholder for a custom-coded menu background (TypeScript/Phaser).
- */
+/** Liminal-style main menu with dust particles, scanlines, and keyboard navigation. */
 export class MenuScene extends Phaser.Scene {
   private menuItems: MenuItem[] = [];
   private menuTexts: Phaser.GameObjects.Text[] = [];
@@ -27,49 +24,61 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     this.canInput = true;
     this.menuTexts = [];
-    this.cameras.main.setBackgroundColor('#0a0a12');
+    this.cameras.main.setBackgroundColor('#000000');
     this.cameras.main.fadeIn(400);
 
     this.audio = new AudioSystem(this);
 
+    this.generateRuntimeAssets();
     this.createBackground();
     this.createMenu();
     this.createFooter();
     this.setupInput();
   }
 
-  /** Placeholder background — replace with custom-coded menu background. */
+  /** Generates runtime textures (no external assets needed). */
+  private generateRuntimeAssets(): void {
+    if (!this.textures.exists('dust')) {
+      const gfx = this.add.graphics();
+      gfx.fillStyle(0xffffff, 1);
+      gfx.fillCircle(8, 8, 8);
+      gfx.generateTexture('dust', 16, 16);
+      gfx.destroy();
+    }
+  }
+
+  /** Liminal background: gradient, dust particles, scanlines. */
   private createBackground(): void {
-    // Vignette
-    const gfx = this.add.graphics();
-    gfx.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.7, 0.7, 0, 0);
-    gfx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT / 3);
-    gfx.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0, 0.7, 0.7);
-    gfx.fillRect(0, GAME_HEIGHT * 2 / 3, GAME_WIDTH, GAME_HEIGHT / 3);
+    // 1. Depth gradient
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0x0a0a0a, 0x0a0a0a, 0x000000, 0x000000, 1);
+    bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Subtle particles
-    const dot = this.add.graphics();
-    dot.fillStyle(0x6644cc, 1);
-    dot.fillCircle(3, 3, 3);
-    dot.generateTexture('menu-dot', 6, 6);
-    dot.destroy();
-
-    this.add.particles(0, 0, 'menu-dot', {
+    // 2. Liminal dust — extremely slow, almost invisible
+    this.add.particles(0, 0, 'dust', {
       x: { min: 0, max: GAME_WIDTH },
       y: { min: 0, max: GAME_HEIGHT },
-      lifespan: 8000,
-      speed: { min: 3, max: 12 },
-      scale: { start: 0.2, end: 0 },
-      alpha: { start: 0.4, end: 0 },
-      frequency: 300,
+      lifespan: { min: 8000, max: 15000 },
+      speedX: { min: -1, max: 1 },
+      speedY: { min: -1, max: 1 },
+      scale: { start: 0.01, end: 0.05 },
+      alpha: { start: 0, end: 0.1 },
+      frequency: 400,
       blendMode: Phaser.BlendModes.ADD,
     });
 
-    // Small title at top
+    // 3. Scanline overlay
+    const lines = this.add.graphics();
+    lines.lineStyle(1, 0xffffff, 0.02);
+    for (let i = 0; i < GAME_HEIGHT; i += 4) {
+      lines.lineBetween(0, i, GAME_WIDTH, i);
+    }
+
+    // Small dim title at top
     this.add.text(GAME_WIDTH / 2, 80, 'BETWEEN', {
       fontFamily: 'monospace',
       fontSize: '32px',
-      color: '#444444',
+      color: '#222222',
     }).setOrigin(0.5);
   }
 
@@ -102,7 +111,7 @@ export class MenuScene extends Phaser.Scene {
 
     this.menuItems.forEach((item, i) => {
       const y = startY + i * spacing;
-      const color = item.enabled ? '#888888' : '#333333';
+      const color = item.enabled ? '#666666' : '#222222';
 
       const text = this.add.text(cx, y, item.label, {
         fontFamily: 'monospace',
@@ -121,7 +130,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, 'Ceccaroni Games \u00b7 2025', {
       fontFamily: 'monospace',
       fontSize: '12px',
-      color: '#333333',
+      color: '#1a1a1a',
     }).setOrigin(0.5);
   }
 
@@ -188,7 +197,7 @@ export class MenuScene extends Phaser.Scene {
           ease: 'Back.easeOut',
         });
       } else {
-        text.setColor(enabled ? '#888888' : '#333333');
+        text.setColor(enabled ? '#666666' : '#222222');
         text.setScale(1);
       }
     });

@@ -9,30 +9,36 @@ Jedes Biome liefert eigene Tiles, Enemies, Mechaniken.
 ```
 between/
 ├── CLAUDE.md                   # Regeln für Claude Code
+├── index.html                  # Entry HTML (responsive meta tags)
 ├── docs/
 │   ├── STATUS.md               # Aktueller Stand
 │   ├── ARCHITECTURE.md         # Dieses Dokument
 │   ├── DECISIONS.md            # Architektur-Entscheide
-│   └── LORE.md                 # Spielwelt, Story, Dimensionen
+│   ├── LORE.md                 # Spielwelt, Story, Dimensionen
+│   └── ISSUE-T002-visual-fixes.md  # Offenes Issue: Tile/Player Fixes
 ├── src/
-│   ├── main.ts                 # Phaser Game Config, Entry Point
+│   ├── main.ts                 # Phaser Game Config + Scale Manager
 │   ├── scenes/
-│   │   ├── SplashScene.ts      # Ceccaroni Games Logo
-│   │   ├── BootScene.ts        # Asset Loading
-│   │   ├── TitleScene.ts       # "Between" Titelscreen
+│   │   ├── BootScene.ts        # Asset Loading + Ladebalken
+│   │   ├── SplashScene.ts      # Ceccaroni Logo (Fullscreen Artwork)
+│   │   ├── TitleScene.ts       # BETWEEN Titel (Fullscreen Artwork)
+│   │   ├── MenuScene.ts        # Hauptmenü (Fullscreen Artwork + Menu)
 │   │   ├── GameScene.ts        # Haupt-Gameplay
 │   │   ├── GameOverScene.ts    # Death Screen
-│   │   └── TestScene.ts        # Sandbox für neue Features
+│   │   ├── CreditsScene.ts     # Credits + ESC zurück
+│   │   ├── SettingsScene.ts    # Sound/Game/Player Einstellungen
+│   │   └── TestScene.ts        # Tileset Debug Grid + Sandbox
 │   ├── entities/
-│   │   ├── Player.ts           # Spieler-Klasse
-│   │   ├── Enemy.ts            # Basis-Enemy
-│   │   └── Projectile.ts       # Geschosse
+│   │   ├── Player.ts           # Spieler (Arcade Sprite, Animationen)
+│   │   ├── Enemy.ts            # Basis-Enemy (geplant)
+│   │   └── Projectile.ts       # Geschosse (geplant)
 │   ├── systems/
-│   │   ├── InputSystem.ts      # Tastatur/Gamepad
-│   │   ├── CombatSystem.ts     # Damage, Health, Death
-│   │   ├── DungeonGenerator.ts # Procedurale Raum-Generierung
-│   │   ├── LootSystem.ts       # Item Drops
-│   │   └── BiomeManager.ts     # Biome-Loading und -Switching
+│   │   ├── InputSystem.ts      # WASD + Pfeiltasten, 8-Richtungen
+│   │   ├── AudioSystem.ts      # Musik (Fade-In/Out, Loop) + SFX
+│   │   ├── DungeonGenerator.ts # Statischer Raum (wird prozedural)
+│   │   ├── CombatSystem.ts     # Damage, Health, Death (geplant)
+│   │   ├── LootSystem.ts       # Item Drops (geplant)
+│   │   └── BiomeManager.ts     # Biome-Loading (geplant)
 │   ├── biomes/
 │   │   ├── machine/            # Dimension 1: The Machine
 │   │   ├── organism/           # Dimension 2: The Organism
@@ -40,20 +46,21 @@ between/
 │   │   ├── clockwork/          # Dimension 4: The Clockwork
 │   │   ├── abyss/              # Dimension 5: The Abyss
 │   │   └── dream/              # Dimension 6: The Dream
-│   ├── ui/
-│   │   ├── HUD.ts              # Health, Minimap, Items
-│   │   └── InventoryUI.ts      # Inventar-Overlay
-│   ├── utils/
-│   │   ├── Constants.ts        # Game Config, Tile Size etc.
-│   │   └── Types.ts            # Shared TypeScript Types
+│   ├── ui/                     # HUD, Inventar (geplant)
+│   └── utils/
+│       └── Constants.ts        # GAME_WIDTH=1280, GAME_HEIGHT=720, etc.
+├── public/
 │   └── assets/
-│       ├── branding/           # Ceccaroni Games Logo, Between Logo
-│       ├── characters/         # Player + NPC Sprites
-│       ├── enemies/            # Enemy Sprites pro Biome
-│       ├── tilesets/           # Tileset PNGs pro Biome
-│       ├── ui/                 # UI Elemente
-│       ├── effects/            # Partikel, Shader
-│       └── audio/              # Sounds, Musik
+│       ├── branding/           # Fullscreen Artworks (splash, title, menu)
+│       ├── characters/player/  # Pupkin Player Spritesheet
+│       ├── enemies/machine/    # Pupkin Enemy Spritesheet
+│       ├── tilesets/machine/   # Pupkin Tileset
+│       ├── props/machine/      # Pupkin Props Spritesheet
+│       ├── effects/projectiles/# Pupkin Projectiles
+│       ├── ui/machine/         # Pupkin UI
+│       └── audio/
+│           ├── music/          # title-theme.mp3
+│           └── sfx/            # menu-select, menu-confirm (TBD)
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
@@ -62,11 +69,14 @@ between/
 
 ## Scene-Flow
 ```
-SplashScene (Ceccaroni Games Logo, 2s)
-  → BootScene (Lädt alle Assets, Ladebalken)
-    → TitleScene ("Between" Titel, Press Start)
-      → GameScene (Gameplay)
-        → GameOverScene (Death → zurück zu TitleScene)
+BootScene (Lädt alle Assets, Ladebalken)
+  → SplashScene (Ceccaroni Artwork, Musik startet, 1.5s Pause + 2.5s Hold)
+    → TitleScene (BETWEEN Artwork, "Press Any Key")
+      → MenuScene (6-Dimensionen Artwork + Navigierbares Menu)
+        ├── "New Run" → GameScene (Gameplay)
+        │                 → GameOverScene → MenuScene
+        ├── "Settings" → SettingsScene → MenuScene
+        └── "Credits" → CreditsScene → MenuScene
 ```
 
 ## Biome-System
@@ -85,3 +95,9 @@ BiomeManager lädt das richtige Biome pro Floor.
 3. Enemies werden aus Biome-Config gespawnt
 4. Player interagiert über Core-Systeme
 5. Floor cleared → nächstes Biome (später: zufällig)
+
+## Scaling
+- Interne Auflösung: 1280x720 (16:9)
+- Phaser Scale.FIT + CENTER_BOTH: skaliert auf jede Bildschirmgrösse
+- Mobile: Landscape erzwungen (Portrait zeigt Rotate-Hinweis)
+- Assets in `public/` (Vite static serving), nicht in `src/`

@@ -10,8 +10,10 @@ export class BootScene extends Phaser.Scene {
   preload(): void {
     this.createLoadingBar();
 
-    // Branding
-    this.load.image('ceccaroni-logo', 'assets/branding/ceccaroni-games.png');
+    // Screen images (fullscreen 1280x720)
+    this.load.image('screen-splash', 'assets/branding/screen-splash.png');
+    this.load.image('screen-title', 'assets/branding/screen-title.png');
+    this.load.image('screen-menu', 'assets/branding/screen-menu.png');
 
     // Player spritesheet (8 cols x 13 rows, 40x32 per frame)
     this.load.spritesheet('player-blue', 'assets/characters/player/player-blue.png', {

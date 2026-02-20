@@ -8,7 +8,7 @@ interface MenuItem {
   action: () => void;
 }
 
-/** Liminal-style main menu with dust particles, scanlines, and keyboard navigation. */
+/** Main menu with fullscreen background image and navigable options. */
 export class MenuScene extends Phaser.Scene {
   private menuItems: MenuItem[] = [];
   private menuTexts: Phaser.GameObjects.Text[] = [];
@@ -29,58 +29,21 @@ export class MenuScene extends Phaser.Scene {
 
     this.audio = new AudioSystem(this);
 
-    this.generateRuntimeAssets();
     this.createBackground();
     this.createMenu();
     this.createFooter();
     this.setupInput();
   }
 
-  /** Generates runtime textures (no external assets needed). */
-  private generateRuntimeAssets(): void {
-    if (!this.textures.exists('dust')) {
-      const gfx = this.add.graphics();
-      gfx.fillStyle(0xffffff, 1);
-      gfx.fillCircle(8, 8, 8);
-      gfx.generateTexture('dust', 16, 16);
-      gfx.destroy();
-    }
-  }
-
-  /** Liminal background: gradient, dust particles, scanlines. */
   private createBackground(): void {
-    // 1. Depth gradient
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x0a0a0a, 0x0a0a0a, 0x000000, 0x000000, 1);
-    bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    // Fullscreen menu background image
+    const img = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'screen-menu');
+    const scaleX = GAME_WIDTH / img.width;
+    const scaleY = GAME_HEIGHT / img.height;
+    img.setScale(Math.max(scaleX, scaleY));
 
-    // 2. Liminal dust — extremely slow, almost invisible, 3-phase alpha
-    this.add.particles(0, 0, 'dust', {
-      x: { min: 0, max: GAME_WIDTH },
-      y: { min: 0, max: GAME_HEIGHT },
-      lifespan: { min: 8000, max: 15000 },
-      speedX: { min: -1, max: 1 },
-      speedY: { min: -1, max: 1 },
-      scale: { start: 0.01, end: 0.05 },
-      alpha: { start: 0, end: 0.1 },
-      quantity: 0.2,
-      frequency: 400,
-      blendMode: Phaser.BlendModes.ADD,
-    });
-
-    // 3. Scanline overlay
-    const lines = this.add.graphics();
-    lines.lineStyle(1, 0xffffff, 0.02);
-    for (let i = 0; i < GAME_HEIGHT; i += 4) {
-      lines.lineBetween(0, i, GAME_WIDTH, i);
-    }
-
-    // Small dim title at top
-    this.add.text(GAME_WIDTH / 2, 80, 'BETWEEN', {
-      fontFamily: 'monospace',
-      fontSize: '32px',
-      color: '#222222',
-    }).setOrigin(0.5);
+    // Dark overlay so menu text is readable
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.45);
   }
 
   private createMenu(): void {
@@ -112,7 +75,7 @@ export class MenuScene extends Phaser.Scene {
 
     this.menuItems.forEach((item, i) => {
       const y = startY + i * spacing;
-      const color = item.enabled ? '#666666' : '#222222';
+      const color = item.enabled ? '#cccccc' : '#444444';
 
       const text = this.add.text(cx, y, item.label, {
         fontFamily: 'monospace',
@@ -131,7 +94,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, 'Ceccaroni Games \u00b7 2025', {
       fontFamily: 'monospace',
       fontSize: '12px',
-      color: '#1a1a1a',
+      color: '#555555',
     }).setOrigin(0.5);
   }
 
@@ -198,7 +161,7 @@ export class MenuScene extends Phaser.Scene {
           ease: 'Back.easeOut',
         });
       } else {
-        text.setColor(enabled ? '#666666' : '#222222');
+        text.setColor(enabled ? '#cccccc' : '#444444');
         text.setScale(1);
       }
     });

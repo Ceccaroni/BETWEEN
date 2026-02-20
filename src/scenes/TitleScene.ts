@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../utils/Constants';
 
-/** Liminal glitch title card. "BETWEEN" flickers unstably, rare violent shifts. */
+/** BETWEEN title card — fullscreen image + "press any key" prompt. */
 export class TitleScene extends Phaser.Scene {
-  private titleText!: Phaser.GameObjects.Text;
   private leaving = false;
 
   constructor() {
@@ -13,56 +12,49 @@ export class TitleScene extends Phaser.Scene {
   create(): void {
     this.leaving = false;
     this.cameras.main.setBackgroundColor('#000000');
+    this.cameras.main.fadeIn(800);
 
-    this.titleText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'BETWEEN', {
-      fontSize: '120px',
+    // Fullscreen title image
+    const img = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'screen-title');
+    const scaleX = GAME_WIDTH / img.width;
+    const scaleY = GAME_HEIGHT / img.height;
+    img.setScale(Math.max(scaleX, scaleY));
+
+    // "Press any key" prompt — appears after delay
+    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.88, 'PRESS ANY KEY', {
       fontFamily: 'monospace',
-      color: '#ffffff',
-      letterSpacing: 15,
+      fontSize: '18px',
+      color: '#666666',
     }).setOrigin(0.5).setAlpha(0);
 
-    // Slow fade to dim presence
     this.tweens.add({
-      targets: this.titleText,
-      alpha: 0.15,
-      duration: 3000,
-      onComplete: () => this.startGlitchLoop(),
+      targets: prompt,
+      alpha: 1,
+      duration: 800,
+      delay: 1500,
+      onComplete: () => {
+        this.tweens.add({
+          targets: prompt,
+          alpha: { from: 1, to: 0.2 },
+          duration: 1000,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1,
+        });
+      },
     });
 
-    // Navigate away after title settles
-    this.time.delayedCall(2000, () => {
+    // Navigate to menu after prompt appears
+    this.time.delayedCall(1500, () => {
       this.input.keyboard?.once('keydown', () => this.goToMenu());
       this.input.once('pointerdown', () => this.goToMenu());
-    });
-  }
-
-  private startGlitchLoop(): void {
-    this.time.addEvent({
-      delay: 100,
-      callback: () => {
-        if (this.leaving) return;
-        const rand = Math.random();
-
-        // Rare violent glitch
-        if (rand > 0.97) {
-          this.titleText.setAlpha(0.8).setX(GAME_WIDTH / 2 + 15);
-          this.time.delayedCall(50, () => {
-            this.titleText.setX(GAME_WIDTH / 2).setAlpha(0.15);
-          });
-        }
-        // Permanent subtle noise
-        else {
-          this.titleText.setAlpha(Phaser.Math.FloatBetween(0.1, 0.25));
-        }
-      },
-      loop: true,
     });
   }
 
   private goToMenu(): void {
     if (this.leaving) return;
     this.leaving = true;
-    this.cameras.main.fadeOut(1000, 0, 0, 0);
+    this.cameras.main.fadeOut(800, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('MenuScene');
     });

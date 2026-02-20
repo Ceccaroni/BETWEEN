@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../utils/Constants';
 import { AudioSystem } from '../systems/AudioSystem';
 
-/** Black pause → Ceccaroni Games logo → fade to TitleScene. Music starts here. */
+/** Ceccaroni Games splash — fullscreen image, music starts here. */
 export class SplashScene extends Phaser.Scene {
   private skipped = false;
 
@@ -18,29 +18,27 @@ export class SplashScene extends Phaser.Scene {
     const audio = new AudioSystem(this);
     audio.playMusic('title-theme', 3000);
 
-    // Black pause (1.5s) before logo appears
+    // Black pause, then show splash image
     this.time.delayedCall(1500, () => {
       if (this.skipped) return;
-      this.showLogo();
+      this.showSplash();
     });
 
-    // Skip on click or keypress
     this.input.once('pointerdown', () => this.skip());
     this.input.keyboard?.once('keydown', () => this.skip());
   }
 
-  private showLogo(): void {
-    const logo = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ceccaroni-logo')
+  private showSplash(): void {
+    const img = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'screen-splash')
       .setAlpha(0);
 
-    const maxHeight = GAME_HEIGHT * 0.6;
-    if (logo.height > maxHeight) {
-      logo.setScale(maxHeight / logo.height);
-    }
+    // Scale to cover screen
+    const scaleX = GAME_WIDTH / img.width;
+    const scaleY = GAME_HEIGHT / img.height;
+    img.setScale(Math.max(scaleX, scaleY));
 
-    // Fade in → hold → fade out
     this.tweens.add({
-      targets: logo,
+      targets: img,
       alpha: 1,
       duration: 800,
       ease: 'Power2',

@@ -54,7 +54,7 @@ export class MenuScene extends Phaser.Scene {
     bg.fillGradientStyle(0x0a0a0a, 0x0a0a0a, 0x000000, 0x000000, 1);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // 2. Liminal dust — extremely slow, almost invisible
+    // 2. Liminal dust — extremely slow, almost invisible, 3-phase alpha
     this.add.particles(0, 0, 'dust', {
       x: { min: 0, max: GAME_WIDTH },
       y: { min: 0, max: GAME_HEIGHT },
@@ -63,6 +63,7 @@ export class MenuScene extends Phaser.Scene {
       speedY: { min: -1, max: 1 },
       scale: { start: 0.01, end: 0.05 },
       alpha: { start: 0, end: 0.1 },
+      quantity: 0.2,
       frequency: 400,
       blendMode: Phaser.BlendModes.ADD,
     });

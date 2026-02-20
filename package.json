@@ -1,0 +1,29 @@
+{
+  "name": "between",
+  "version": "1.0.0",
+  "description": "Multi-biome 2D roguelike. 6 dimensions, each a different world.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ceccaroni/BETWEEN.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ceccaroni/BETWEEN/issues"
+  },
+  "homepage": "https://github.com/Ceccaroni/BETWEEN#readme",
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

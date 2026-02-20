@@ -1,0 +1,55 @@
+import Phaser from 'phaser';
+import { GAME_WIDTH, GAME_HEIGHT } from '../utils/Constants';
+
+/** Shows the Ceccaroni Games logo with fade-in/hold/fade-out. */
+export class SplashScene extends Phaser.Scene {
+  private skipped = false;
+
+  constructor() {
+    super({ key: 'SplashScene' });
+  }
+
+  create(): void {
+    this.cameras.main.setBackgroundColor('#000000');
+
+    const logo = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ceccaroni-logo')
+      .setAlpha(0);
+
+    // Scale logo to fit nicely (max 60% of screen height)
+    const maxHeight = GAME_HEIGHT * 0.6;
+    if (logo.height > maxHeight) {
+      logo.setScale(maxHeight / logo.height);
+    }
+
+    // Fade in → hold → fade out
+    this.tweens.add({
+      targets: logo,
+      alpha: 1,
+      duration: 500,
+      ease: 'Power2',
+      onComplete: () => {
+        this.time.delayedCall(2000, () => {
+          if (this.skipped) return;
+          this.fadeOut();
+        });
+      },
+    });
+
+    // Skip on click or keypress
+    this.input.once('pointerdown', () => this.skip());
+    this.input.keyboard?.once('keydown', () => this.skip());
+  }
+
+  private skip(): void {
+    if (this.skipped) return;
+    this.skipped = true;
+    this.fadeOut();
+  }
+
+  private fadeOut(): void {
+    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('TitleScene');
+    });
+  }
+}

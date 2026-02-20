@@ -33,6 +33,16 @@ export class BootScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     });
+
+    // Audio — files are optional, missing files are silently skipped
+    this.load.audio('title-theme', 'assets/audio/music/title-theme.mp3');
+    this.load.audio('menu-select', 'assets/audio/sfx/menu-select.mp3');
+    this.load.audio('menu-confirm', 'assets/audio/sfx/menu-confirm.mp3');
+
+    // Ignore audio load errors (files may not exist yet)
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      console.warn(`Asset not found (skipped): ${file.key}`);
+    });
   }
 
   create(): void {

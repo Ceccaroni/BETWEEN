@@ -6,6 +6,7 @@ import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { CreditsScene } from './scenes/CreditsScene';
+import { SettingsScene } from './scenes/SettingsScene';
 import { TestScene } from './scenes/TestScene';
 
 /** Phaser game configuration and entry point. */
@@ -23,7 +24,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, SplashScene, TitleScene, GameScene, GameOverScene, CreditsScene, TestScene],
+  scene: [BootScene, SplashScene, TitleScene, GameScene, GameOverScene, CreditsScene, SettingsScene, TestScene],
 };
 
 new Phaser.Game(config);

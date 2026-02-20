@@ -109,7 +109,7 @@ export class TitleScene extends Phaser.Scene {
     this.menuItems = [
       { label: 'New Run', enabled: true, action: () => this.startGame() },
       { label: 'Continue', enabled: false, action: () => {} },
-      { label: 'Settings', enabled: false, action: () => {} },
+      { label: 'Settings', enabled: true, action: () => this.showSettings() },
       { label: 'Credits', enabled: true, action: () => this.showCredits() },
     ];
 
@@ -243,9 +243,11 @@ export class TitleScene extends Phaser.Scene {
 
   private showCredits(): void {
     this.audio.stopMusic(500);
-    this.cameras.main.fadeOut(400, 0, 0, 0);
-    this.cameras.main.once('camerafadeoutcomplete', () => {
-      this.scene.start('CreditsScene');
-    });
+    this.scene.start('CreditsScene');
+  }
+
+  private showSettings(): void {
+    this.audio.stopMusic(500);
+    this.scene.start('SettingsScene');
   }
 }

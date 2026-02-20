@@ -3,11 +3,14 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../utils/Constants';
 
 /** Credits screen with game info. ESC or Backspace returns to title. */
 export class CreditsScene extends Phaser.Scene {
+  private leaving = false;
+
   constructor() {
     super({ key: 'CreditsScene' });
   }
 
   create(): void {
+    this.leaving = false;
     this.cameras.main.setBackgroundColor('#0a0a12');
     this.cameras.main.fadeIn(400);
 
@@ -35,9 +38,8 @@ export class CreditsScene extends Phaser.Scene {
   }
 
   private goBack(): void {
-    this.cameras.main.fadeOut(400, 0, 0, 0);
-    this.cameras.main.once('camerafadeoutcomplete', () => {
-      this.scene.start('TitleScene');
-    });
+    if (this.leaving) return;
+    this.leaving = true;
+    this.scene.start('TitleScene');
   }
 }

@@ -23,13 +23,13 @@ export class BootScene extends Phaser.Scene {
       frameHeight: 32,
     });
 
-    // ASSET-REGISTRY: hero-wizard.png, 512×64, 64×64 cells, 8 frames (DungeonAssetPack) — idle
-    this.load.spritesheet('hero-wizard', 'assets/characters/hero-wizard/hero-wizard.png', {
-      frameWidth: 64,
-      frameHeight: 64,
+    // ASSET-REGISTRY: hero-wizard-idle.png, 2112×768, 352×384 cells, 6×2=12 frames — idle cycle
+    this.load.spritesheet('hero-wizard-idle', 'assets/characters/hero-wizard/hero-wizard-idle.png', {
+      frameWidth: 352,
+      frameHeight: 384,
     });
 
-    // ASSET-REGISTRY: hero-wizard-run.png, 2816×1536, 352×384 cells, 8×4=32 frames — run cycle
+    // ASSET-REGISTRY: hero-wizard-run.png, 2816×1536, 352×384 cells, 32 frames — run cycle
     this.load.spritesheet('hero-wizard-run', 'assets/characters/hero-wizard/hero-wizard-run.png', {
       frameWidth: 352,
       frameHeight: 384,

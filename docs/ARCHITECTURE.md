@@ -15,6 +15,7 @@ between/
 │   ├── ARCHITECTURE.md         # Dieses Dokument
 │   ├── DECISIONS.md            # Architektur-Entscheide
 │   ├── LORE.md                 # Spielwelt, Story, Dimensionen
+│   ├── ASSET-REGISTRY.md       # Alle Assets mit exakten Dimensionen
 │   └── ISSUE-T002-visual-fixes.md  # Offenes Issue: Tile/Player Fixes
 ├── src/
 │   ├── main.ts                 # Phaser Game Config + Scale Manager
@@ -29,7 +30,7 @@ between/
 │   │   ├── SettingsScene.ts    # Sound/Game/Player Einstellungen
 │   │   └── TestScene.ts        # Tileset Debug Grid + Sandbox
 │   ├── entities/
-│   │   ├── Player.ts           # Spieler (FreeKnight, Arcade Sprite, Scale 2×)
+│   │   ├── Player.ts           # Hero Wizard (Arcade Sprite, Scale 0.55)
 │   │   ├── Enemy.ts            # Basis-Enemy (geplant)
 │   │   └── Projectile.ts       # Geschosse (geplant)
 │   ├── systems/
@@ -52,12 +53,15 @@ between/
 ├── public/
 │   └── assets/
 │       ├── branding/           # Fullscreen Artworks (splash, title, menu)
-│       ├── characters/player/  # FreeKnight Player (8 Sheets) + Pupkin Backup
+│       ├── characters/
+│       │   ├── hero-wizard/    # Hero Wizard (idle 12F + run 32F, 352×384)
+│       │   └── player/         # Pupkin Player Backup (40×32, inaktiv)
 │       ├── enemies/machine/    # Pupkin Enemy Spritesheet
 │       ├── tilesets/machine/   # Pupkin Tileset
 │       ├── props/machine/      # Pupkin Props Spritesheet
 │       ├── effects/projectiles/# Pupkin Projectiles
 │       ├── ui/machine/         # Pupkin UI
+│       ├── packs/              # Rohe Asset-Packs (32rogues, dungeon-pack, etc.)
 │       └── audio/
 │           ├── music/          # title-theme.mp3
 │           └── sfx/            # menu-select, menu-confirm (TBD)
@@ -78,6 +82,13 @@ BootScene (Lädt alle Assets, Ladebalken)
         ├── "Settings" → SettingsScene → MenuScene
         └── "Credits" → CreditsScene → MenuScene
 ```
+
+## Player (Hero Wizard)
+- Zwei separate Spritesheets: `hero-wizard-idle.png` (12 Frames) + `hero-wizard-run.png` (32 Frames)
+- Frame-Grösse: 352×384 Pixel
+- Display-Scale: 0.55 (ergibt ~194×211 Display-Pixel, ~1.2 Tiles breit)
+- Physics Body: 80×140 mit Offset 136×160
+- Animations-Wechsel basierend auf Velocity-Threshold (>10)
 
 ## Biome-System
 Jedes Biome ist ein Ordner unter `src/biomes/` mit:
@@ -101,3 +112,4 @@ BiomeManager lädt das richtige Biome pro Floor.
 - Phaser Scale.FIT + CENTER_BOTH: skaliert auf jede Bildschirmgrösse
 - Mobile: Landscape erzwungen (Portrait zeigt Rotate-Hinweis)
 - Assets in `public/` (Vite static serving), nicht in `src/`
+- Tiles: 32×32 intern, Layer Scale 2× → 64×64 Display

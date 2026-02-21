@@ -28,8 +28,8 @@ export class GameScene extends Phaser.Scene {
     // Spawn player at room center
     this.player = new Player(this, this.room.spawnX, this.room.spawnY);
 
-    // Player shadow (sized for Hero Wizard at scale 2, ~48px wide display)
-    const shadow = this.add.ellipse(0, 0, 40, 12, 0x000000, 0.35);
+    // Player shadow (sized for Hero Wizard at WIZARD_SCALE 0.55)
+    const shadow = this.add.ellipse(0, 0, 50, 14, 0x000000, 0.35);
     shadow.setDepth(9);
     this.player.setData('shadow', shadow);
 

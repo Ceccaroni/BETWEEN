@@ -1,6 +1,9 @@
 # OS
 .DS_Store
 
+# Raw asset packs (originals outside public/)
+pupkin/
+
 # Logs
 logs
 *.log

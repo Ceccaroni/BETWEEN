@@ -28,8 +28,8 @@ export class GameScene extends Phaser.Scene {
     // Spawn player at room center
     this.player = new Player(this, this.room.spawnX, this.room.spawnY);
 
-    // Player shadow (sized for FreeKnight at scale 2)
-    const shadow = this.add.ellipse(0, 0, 56, 16, 0x000000, 0.35);
+    // Player shadow (sized for Hero Wizard at scale 2, ~48px wide display)
+    const shadow = this.add.ellipse(0, 0, 40, 12, 0x000000, 0.35);
     shadow.setDepth(9);
     this.player.setData('shadow', shadow);
 
@@ -48,6 +48,7 @@ export class GameScene extends Phaser.Scene {
 
     // Dust particles
     this.createDustEmitter();
+
   }
 
   update(): void {
@@ -57,11 +58,24 @@ export class GameScene extends Phaser.Scene {
 
     // Update shadow position
     const shadow = this.player.getData('shadow') as Phaser.GameObjects.Ellipse;
-    shadow.setPosition(this.player.x, this.player.y + 55);
+    shadow.setPosition(this.player.x, this.player.y + 50);
 
-    // Emit dust on direction change
+    const vx = this.player.body?.velocity.x ?? 0;
+    const vy = this.player.body?.velocity.y ?? 0;
+    const moving = Math.abs(vx) > 10 || Math.abs(vy) > 10;
+
+    // Continuous dust trail while running
+    if (moving) {
+      this.dustEmitter.emitParticleAt(
+        this.player.x + Phaser.Math.Between(-8, 8),
+        this.player.y + 50,
+        1
+      );
+    }
+
+    // Burst on direction change
     if (dir.x !== 0 && dir.x !== this.lastDirX) {
-      this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 55, 3);
+      this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 50, 5);
     }
     this.lastDirX = dir.x;
   }

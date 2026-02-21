@@ -23,17 +23,17 @@ export class BootScene extends Phaser.Scene {
       frameHeight: 32,
     });
 
-    // ASSET-REGISTRY: FreeKnight_v1, Colour1/Outline, 120×80 per frame
-    const fk = 'assets/characters/player/freeknight-';
-    const fkOpts = { frameWidth: 120, frameHeight: 80 };
-    this.load.spritesheet('fk-idle', `${fk}idle.png`, fkOpts);     // 10 frames
-    this.load.spritesheet('fk-run', `${fk}run.png`, fkOpts);       // 10 frames
-    this.load.spritesheet('fk-attack', `${fk}attack.png`, fkOpts); // 4 frames
-    this.load.spritesheet('fk-death', `${fk}death.png`, fkOpts);   // 10 frames
-    this.load.spritesheet('fk-dash', `${fk}dash.png`, fkOpts);     // 2 frames
-    this.load.spritesheet('fk-hit', `${fk}hit.png`, fkOpts);       // 1 frame
-    this.load.spritesheet('fk-jump', `${fk}jump.png`, fkOpts);     // 3 frames
-    this.load.spritesheet('fk-fall', `${fk}fall.png`, fkOpts);     // 3 frames
+    // ASSET-REGISTRY: hero-wizard.png, 512×64, 64×64 cells, 8 frames (DungeonAssetPack) — idle
+    this.load.spritesheet('hero-wizard', 'assets/characters/hero-wizard/hero-wizard.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+
+    // ASSET-REGISTRY: hero-wizard-run.png, 2816×1536, 352×384 cells, 8×4=32 frames — run cycle
+    this.load.spritesheet('hero-wizard-run', 'assets/characters/hero-wizard/hero-wizard-run.png', {
+      frameWidth: 352,
+      frameHeight: 384,
+    });
 
     // ASSET-REGISTRY: enemies.png, 320×1216, 32×32 cells, 10 cols × 38 rows (Pack: 10x38 Cells)
     this.load.spritesheet('machine-enemies', 'assets/enemies/machine/enemies.png', {

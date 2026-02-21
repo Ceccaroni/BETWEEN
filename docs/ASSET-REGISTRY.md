@@ -2,7 +2,32 @@
 
 ---
 
-## Characters – FreeKnight (AKTIVER PLAYER)
+## Characters – Hero Wizard (AKTIVER PLAYER)
+
+Quelle: DungeonAssetPack (itch.io)
+Lokaler Ordner: `ASSETS/DungeonAssetPack/hero/`
+Projekt-Pfad: `public/assets/characters/hero-wizard/hero-wizard.png`
+Frame-Size: **64×64 px**
+Image: **512×64 px** (8 Frames × 64×64, eine Reihe)
+Sichtbarer Charakter: ~24×40 px innerhalb des 64×64 Frames
+Scale: **2** (→ 128×128 display, Char ~48×80 display)
+
+| Datei | Pfad | Dimensionen | Frames | Beschreibung |
+|-------|------|-------------|--------|-------------|
+| hero-wizard.png | public/assets/characters/hero-wizard/ | 512×64 | 8 | Idle + Run Zyklus |
+
+### Animations-Config:
+```
+player-idle: hero-wizard frame [0],     frameRate 1,  repeat -1 (statisch)
+player-run:  hero-wizard frames [0..7], frameRate 10, repeat -1 (voller 8-Frame Walk-Zyklus)
+```
+
+### Physics Body (bei scale 2):
+- size(20, 34), offset(22, 20) → Tighter fit um sichtbaren Charakter
+
+---
+
+## Characters – FreeKnight (BACKUP/INAKTIV)
 
 Quelle: FreeKnight_v1 (itch.io)
 Lokaler Ordner: `FreeKnight_v1/Colour1/Outline/120x80_PNGSheets/`
@@ -266,3 +291,56 @@ Inhalt: 8 animierte Projektile inkl. Kollisions-Frames
 
 **Gesamt: 57 PNG-Dateien im `pupkin/`-Ordner inventarisiert.**
 **Alle Cell-Sizes aus Pack-Dokumentation berechnet — nicht geraten, nicht per Pixel-Analyse geschätzt.**
+
+---
+
+## Neue Asset Packs (in `public/assets/packs/`)
+
+### DungeonAssetPack
+
+Quelle: DungeonAssetPack (itch.io)
+Projekt-Pfad: `public/assets/packs/dungeon-asset-pack/`
+
+| Ordner | Inhalt | Cell-Size | Hinweis |
+|--------|--------|-----------|---------|
+| hero/ | Hero Warrior (9f), Hero Ranger (8f), Arrow | **64×64** | Aus Dateinamen |
+| enemies/ | 26 Enemy-Sheets (Goblins, Skeletons, Witch, etc.) | **64×64** / **128×128** | Grösse im Dateinamen |
+| gui/ | 47 UI-Elemente (Buttons, Bars, Portraits) | Variabel | Einzelbilder |
+| vfx/ | Explosions, Hurt, Blood-Effekte | **64×64** | Spritesheets |
+| water/ | Wasser-Animationen | **32×32** | Aus Dateinamen |
+| props/ | Tileset, Türen, Truhen, Fallen, Deko | **32×32** | tiles_map.png = Haupt-Tileset |
+
+### 32rogues
+
+Quelle: Seth Boyles (itch.io, 2024)
+Projekt-Pfad: `public/assets/packs/32rogues/`
+Cell-Size: **32×32** (aus Pack-Name, keine Cell-Datei)
+
+| Datei | Inhalt |
+|-------|--------|
+| rogues.png | 5×8 Grid Character-Sprites (Ritter, Wizards, Barbaren, etc.) |
+| monsters.png | Monster-Sprites |
+| items.png | Equipment & Items |
+| animals.png | Tier-Sprites |
+| tiles.png | Tileset |
+
+Wizard-Sprites in Row 5: Female Wizard, Male Wizard, Druid, Desert Sage, Dwarf Mage
+
+### 32rogues-2
+
+Quelle: Seth Boyles (itch.io, erweitert)
+Projekt-Pfad: `public/assets/packs/32rogues-2/`
+Cell-Size: **32×32**
+
+Erweiterung von 32rogues mit zusätzlichen Items, Autotiles, animierten Tiles.
+
+### 32x32 Dungeon Pack
+
+Projekt-Pfad: `public/assets/packs/dungeon-pack/`
+Cell-Size: **32×32** (aus Pack-Name)
+
+| Dateien | Inhalt |
+|---------|--------|
+| Dungeon_00..35.png | Individuelle Dungeon-Tiles |
+| Sheet.png | Master-Sheet alle Tiles |
+| Preview.png | Vorschau |

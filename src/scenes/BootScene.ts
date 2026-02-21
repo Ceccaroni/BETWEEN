@@ -10,38 +10,63 @@ export class BootScene extends Phaser.Scene {
   preload(): void {
     this.createLoadingBar();
 
-    // Screen images (fullscreen 1280x720)
+    // ASSET-REGISTRY: screen-splash.png, 2752×1536, single image
     this.load.image('screen-splash', 'assets/branding/screen-splash.png');
+    // ASSET-REGISTRY: screen-title.png, 2752×1536, single image
     this.load.image('screen-title', 'assets/branding/screen-title.png');
+    // ASSET-REGISTRY: screen-menu.png, 2752×1536, single image
     this.load.image('screen-menu', 'assets/branding/screen-menu.png');
 
-    // Player spritesheet (8 cols x 13 rows, 40x32 per frame)
+    // ASSET-REGISTRY: player-blue.png, 320×416, 40×32 cells (Pupkin backup)
     this.load.spritesheet('player-blue', 'assets/characters/player/player-blue.png', {
       frameWidth: 40,
       frameHeight: 32,
     });
 
-    // Machine tileset (37 cols x 23 rows, 32x32)
+    // ASSET-REGISTRY: FreeKnight_v1, Colour1/Outline, 120×80 per frame
+    const fk = 'assets/characters/player/freeknight-';
+    const fkOpts = { frameWidth: 120, frameHeight: 80 };
+    this.load.spritesheet('fk-idle', `${fk}idle.png`, fkOpts);     // 10 frames
+    this.load.spritesheet('fk-run', `${fk}run.png`, fkOpts);       // 10 frames
+    this.load.spritesheet('fk-attack', `${fk}attack.png`, fkOpts); // 4 frames
+    this.load.spritesheet('fk-death', `${fk}death.png`, fkOpts);   // 10 frames
+    this.load.spritesheet('fk-dash', `${fk}dash.png`, fkOpts);     // 2 frames
+    this.load.spritesheet('fk-hit', `${fk}hit.png`, fkOpts);       // 1 frame
+    this.load.spritesheet('fk-jump', `${fk}jump.png`, fkOpts);     // 3 frames
+    this.load.spritesheet('fk-fall', `${fk}fall.png`, fkOpts);     // 3 frames
+
+    // ASSET-REGISTRY: enemies.png, 320×1216, 32×32 cells, 10 cols × 38 rows (Pack: 10x38 Cells)
+    this.load.spritesheet('machine-enemies', 'assets/enemies/machine/enemies.png', {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
+
+    // ASSET-REGISTRY: tileset.png, 1184×736, 32×32 tiles, 37 cols × 23 rows
     this.load.image('machine-tileset', 'assets/tilesets/machine/tileset.png');
 
-    // Props spritesheet (24 cols x 22 rows, 32x32)
+    // ASSET-REGISTRY: props.png, 768×704, 32×32 cells, 24 cols × 22 rows (Pack: 24x22 Cells)
     this.load.spritesheet('machine-props', 'assets/props/machine/props.png', {
       frameWidth: 32,
       frameHeight: 32,
     });
 
-    // Projectiles (5 cols x 9 rows, 32x32)
+    // ASSET-REGISTRY: projectiles.png, 160×288, 32×32 cells, 5 cols × 9 rows (Pack: 5x9 Cells)
     this.load.spritesheet('projectiles', 'assets/effects/projectiles/projectiles.png', {
       frameWidth: 32,
       frameHeight: 32,
     });
 
-    // Audio — files are optional, missing files are silently skipped
-    this.load.audio('title-theme', 'assets/audio/music/title-theme.mp3');
-    this.load.audio('menu-select', 'assets/audio/sfx/menu-select.mp3');
-    this.load.audio('menu-confirm', 'assets/audio/sfx/menu-confirm.mp3');
+    // ASSET-REGISTRY: ui.png, 640×352, 32×32 cells, 20 cols × 11 rows (Pack: 20x11 Cells)
+    this.load.spritesheet('machine-ui', 'assets/ui/machine/ui.png', {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
 
-    // Ignore audio load errors (files may not exist yet)
+    // Audio
+    this.load.audio('title-theme', 'assets/audio/music/title-theme.mp3');
+    // menu-select.mp3 and menu-confirm.mp3 not yet created — add when available
+
+    // Ignore load errors for optional assets
     this.load.on('loaderror', (file: Phaser.Loader.File) => {
       console.warn(`Asset not found (skipped): ${file.key}`);
     });

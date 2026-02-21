@@ -29,13 +29,13 @@ between/
 │   │   ├── SettingsScene.ts    # Sound/Game/Player Einstellungen
 │   │   └── TestScene.ts        # Tileset Debug Grid + Sandbox
 │   ├── entities/
-│   │   ├── Player.ts           # Spieler (Arcade Sprite, Animationen)
+│   │   ├── Player.ts           # Spieler (FreeKnight, Arcade Sprite, Scale 2×)
 │   │   ├── Enemy.ts            # Basis-Enemy (geplant)
 │   │   └── Projectile.ts       # Geschosse (geplant)
 │   ├── systems/
 │   │   ├── InputSystem.ts      # WASD + Pfeiltasten, 8-Richtungen
 │   │   ├── AudioSystem.ts      # Musik (Fade-In/Out, Loop) + SFX
-│   │   ├── DungeonGenerator.ts # Statischer Raum (wird prozedural)
+│   │   ├── DungeonGenerator.ts # Raum mit Pupkin Tiles (20×11, Scale 2×)
 │   │   ├── CombatSystem.ts     # Damage, Health, Death (geplant)
 │   │   ├── LootSystem.ts       # Item Drops (geplant)
 │   │   └── BiomeManager.ts     # Biome-Loading (geplant)
@@ -52,7 +52,7 @@ between/
 ├── public/
 │   └── assets/
 │       ├── branding/           # Fullscreen Artworks (splash, title, menu)
-│       ├── characters/player/  # Pupkin Player Spritesheet
+│       ├── characters/player/  # FreeKnight Player (8 Sheets) + Pupkin Backup
 │       ├── enemies/machine/    # Pupkin Enemy Spritesheet
 │       ├── tilesets/machine/   # Pupkin Tileset
 │       ├── props/machine/      # Pupkin Props Spritesheet

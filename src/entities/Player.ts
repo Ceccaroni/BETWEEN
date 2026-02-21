@@ -1,61 +1,64 @@
 import Phaser from 'phaser';
 import { PLAYER_SPEED } from '../utils/Constants';
 
-/** Player character using Pupkin blue spritesheet (8 cols x 13 rows, 40x32 per frame). */
+/**
+ * Player character using FreeKnight_v1 spritesheets.
+ * ASSET-REGISTRY: FreeKnight Colour1/Outline, 120×80 per frame.
+ * Separate sheets per animation (fk-idle, fk-run, fk-attack, etc.).
+ * Character ~40×50px visible within 120×80 frame.
+ */
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player-blue');
+    super(scene, x, y, 'fk-idle');
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
     this.setCollideWorldBounds(false);
-    this.setSize(16, 20);
-    this.setOffset(12, 10);
+    this.setScale(2);
+    // Physics body: tight around the visible knight (scaled 2×)
+    this.setSize(30, 45);
+    this.setOffset(45, 17);
+    this.setDepth(10);
 
     this.createAnimations();
     this.play('player-idle');
   }
 
-  /** Creates all player animations from the spritesheet. */
+  /** Creates all player animations from separate FreeKnight sheets. */
   private createAnimations(): void {
-    // Row 0: Idle (frames 0-3)
     this.scene.anims.create({
       key: 'player-idle',
-      frames: this.scene.anims.generateFrameNumbers('player-blue', {
-        start: 0, end: 3,
-      }),
-      frameRate: 6,
+      frames: this.scene.anims.generateFrameNumbers('fk-idle', { start: 0, end: 9 }),
+      frameRate: 8,
       repeat: -1,
     });
 
-    // Row 3: Run (frames 24-27)
     this.scene.anims.create({
       key: 'player-run',
-      frames: this.scene.anims.generateFrameNumbers('player-blue', {
-        start: 24, end: 27,
-      }),
-      frameRate: 10,
+      frames: this.scene.anims.generateFrameNumbers('fk-run', { start: 0, end: 9 }),
+      frameRate: 12,
       repeat: -1,
     });
 
-    // Row 4: Shoot (frames 32-34)
     this.scene.anims.create({
-      key: 'player-shoot',
-      frames: this.scene.anims.generateFrameNumbers('player-blue', {
-        start: 32, end: 34,
-      }),
-      frameRate: 10,
+      key: 'player-attack',
+      frames: this.scene.anims.generateFrameNumbers('fk-attack', { start: 0, end: 3 }),
+      frameRate: 12,
       repeat: 0,
     });
 
-    // Row 5: Death (frames 40-45)
     this.scene.anims.create({
       key: 'player-death',
-      frames: this.scene.anims.generateFrameNumbers('player-blue', {
-        start: 40, end: 45,
-      }),
+      frames: this.scene.anims.generateFrameNumbers('fk-death', { start: 0, end: 9 }),
       frameRate: 8,
+      repeat: 0,
+    });
+
+    this.scene.anims.create({
+      key: 'player-hit',
+      frames: this.scene.anims.generateFrameNumbers('fk-hit', { start: 0, end: 0 }),
+      frameRate: 1,
       repeat: 0,
     });
   }
@@ -64,7 +67,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   updateAnimation(): void {
     const vx = this.body?.velocity.x ?? 0;
     const vy = this.body?.velocity.y ?? 0;
-    const moving = Math.abs(vx) > 1 || Math.abs(vy) > 1;
+    const moving = Math.abs(vx) > 10 || Math.abs(vy) > 10;
 
     if (moving) {
       this.play('player-run', true);

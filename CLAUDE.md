@@ -47,6 +47,44 @@ Bei JEDEM visuellen Feature das Maximum rausholen:
 - Loot-Drop mit Bounce-Physics
 Phaser 3 hat all das eingebaut. BENUTZEN.
 
+## Asset Rule (NICHT OPTIONAL)
+
+**Bevor du IRGENDEINEN Asset in Code verwendest, analysierst du ihn zuerst.**
+
+### Bei Spritesheets:
+1. Datei öffnen und Pixel-Dimensionen lesen (NICHT raten)
+2. Cell-Size bestimmen (Frame-Breite × Frame-Höhe)
+3. Frame-Layout berechnen (Spalten × Reihen)
+4. Animationen identifizieren (welche Reihe = welche Animation)
+5. Ergebnis in `docs/ASSET-REGISTRY.md` dokumentieren
+
+### Bei Tilesets:
+1. Pixel-Dimensionen lesen
+2. Tile-Size bestimmen
+3. Tile-Positionen/IDs für verschiedene Typen identifizieren (Boden, Wand, Deko)
+4. In ASSET-REGISTRY.md dokumentieren
+
+### Verboten:
+- `this.load.spritesheet()` mit Werten die nicht aus dem Registry kommen
+- Frame-Dimensionen "ausprobieren" oder "schätzen"
+- Asset-Bugs durch Trial-and-Error fixen statt durch Registry-Abgleich
+
+### Kontrollmechanismus:
+Jeder `frameWidth`/`frameHeight`-Wert im Code MUSS einen Kommentar haben:
+```typescript
+// ASSET-REGISTRY: player_blue.png, 256×128, 32×32 cells
+frameWidth: 32,
+frameHeight: 32
+```
+
+## Phasen-Regel (NICHT OPTIONAL)
+
+Tickets mit mehreren Phasen werden SEQUENZIELL abgearbeitet.
+- Phase 0 muss abgeschlossen und bestätigt sein bevor Phase 1 beginnt
+- Jede Phase hat eigene Akzeptanzkriterien
+- Jede Phase bekommt einen eigenen Commit
+- Bei Unsicherheit: FRAGEN statt raten
+
 ## Architektur
 → docs/ARCHITECTURE.md
 

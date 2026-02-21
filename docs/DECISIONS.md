@@ -48,3 +48,15 @@
 ## 2026-02-20: AudioSystem als zentrale Klasse
 **Entscheid:** Eigene AudioSystem-Klasse statt direkte Phaser-Sound-Calls
 **Warum:** Fade-In/Out-Logik, Volume-Management und graceful Handling fehlender Audio-Files an einem Ort. Jede Scene instanziert AudioSystem und nutzt einheitliches API.
+
+## 2026-02-21: Player-Wechsel Pupkin → FreeKnight
+**Entscheid:** FreeKnight_v1 (itch.io) ersetzt Pupkin Player-Sprites
+**Warum:** Das Pupkin Player-Sheet hat Text-Labels ("Idle", "Run", etc.) als Pixel in die Sprite-Cells eingebacken. Das macht saubere Animationen unmöglich — Frame-Indices sind fehleranfällig, setCrop zerstört die Ausrichtung zwischen Frames. FreeKnight hat separate PNGs pro Animation (idle.png, run.png, etc.) mit konsistenten 120×80 Frames und professionellem Sprite-Design.
+**Vorher:** Pupkin `players blue x1.png` (40×32 Cells, Text-Labels im Grid)
+**Nachher:** FreeKnight `Colour1/Outline/120x80_PNGSheets/` (8 Sheets geladen)
+**Pupkin Player bleibt als Backup** in BootScene geladen (`player-blue` Key), wird aber nicht aktiv genutzt.
+
+## 2026-02-21: Tilemap Layer-Scale statt Camera-Zoom
+**Entscheid:** Tiles 32×32 intern, Layer `setScale(2)` → 64×64 Display. Kein Camera-Zoom.
+**Warum:** Camera-Zoom 2× reduziert den sichtbaren Bereich auf 640×360, was bei einem 20×11 Raum (640×352) die Ränder abschneidet. Layer-Scale hält die Camera bei 1280×720 und vergrössert nur die Tiles. Raum 20×11 × 64 = 1280×704 füllt den Screen fast komplett.
+**Alternativen verworfen:** Camera zoom 2× (schnitt Wände ab), native 64×64 Tiles (gibt es nicht im Pack)

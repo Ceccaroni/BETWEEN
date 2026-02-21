@@ -1,3 +1,40 @@
+# Asset Registry
+
+---
+
+## Characters – FreeKnight (AKTIVER PLAYER)
+
+Quelle: FreeKnight_v1 (itch.io)
+Lokaler Ordner: `FreeKnight_v1/Colour1/Outline/120x80_PNGSheets/`
+Frame-Size: **120×80 px** (alle Animationen konsistent)
+Charakter: ~40×50 px sichtbar innerhalb des 120×80 Frames
+
+| Datei | Pfad | Dimensionen | Frames | Animation |
+|-------|------|-------------|--------|-----------|
+| freeknight-idle.png | public/assets/characters/player/ | 1200×80 | 10 | Idle (atmend) |
+| freeknight-run.png | public/assets/characters/player/ | 1200×80 | 10 | Run |
+| freeknight-attack.png | public/assets/characters/player/ | 480×80 | 4 | Attack (stationary) |
+| freeknight-death.png | public/assets/characters/player/ | 1200×80 | 10 | Death (stationary) |
+| freeknight-dash.png | public/assets/characters/player/ | 240×80 | 2 | Dash |
+| freeknight-hit.png | public/assets/characters/player/ | 120×80 | 1 | Hit reaction |
+| freeknight-jump.png | public/assets/characters/player/ | 360×80 | 3 | Jump |
+| freeknight-fall.png | public/assets/characters/player/ | 360×80 | 3 | Fall |
+
+### Animations-Config:
+```
+player-idle:    fk-idle   frames [0..9],  frameRate 8,  repeat -1
+player-run:     fk-run    frames [0..9],  frameRate 12, repeat -1
+player-attack:  fk-attack frames [0..3],  frameRate 12, repeat 0
+player-death:   fk-death  frames [0..9],  frameRate 8,  repeat 0
+player-hit:     fk-hit    frames [0],     frameRate 1,  repeat 0
+```
+
+### Weitere verfügbare Animationen (noch nicht geladen):
+Roll (12f), CrouchWalk (8f), WallClimb (7f), Slide (2f), TurnAround (3f),
+Attack2 (6f), AttackCombo (10f), Crouch-Varianten, Wall-Varianten
+
+---
+
 # Asset Registry – Pupkin Tech Dungeon
 
 > **Quelle:** Pupkin Tech Dungeon Asset Pack (Trevor Pupkin, itch.io)

@@ -1,25 +1,23 @@
-# ISSUE: T-002 Visual Fixes (HIGH PRIORITY)
+# ISSUE: T-002 Visual Fixes
 
-## Status: OFFEN
+## Status: GRÖSSTENTEILS GELÖST (2026-02-21)
 
-## Probleme
-1. **Player-Sprite zu klein** — 40x32px auf 1280x720 kaum sichtbar. Braucht 2x-3x Scale oder x2 Assets.
-2. **Player-Animationsframes falsch** — Zeigt Label-Text ("Idle", "No Gun") aus dem Spritesheet. Frame-Indices müssen korrigiert werden.
-3. **Raum nicht zentriert** — Room startet bei (0,0), sollte zentriert sein oder Kamera besser konfiguriert.
-4. **Keine Pupkin Floor-Tiles** — Aktuell Rectangle-Fallback statt echte Tileset-Tiles. Tile-Indices müssen via TestScene (Tile-Debug-Grid) identifiziert werden.
-5. **Keine Wand-Varianten** — Alle Wände nutzen denselben Tile (ti(3,0)). Braucht Corners, Edges, Faces.
-6. **Keine animierten Props** — Prop-Frame-Indices waren falsch, Props temporär entfernt.
-7. **Kein Tileset-Floor** — Floor braucht blaue Tech-Streifen aus dem Pupkin Tileset.
+## Gelöst
+1. ~~**Player-Sprite zu klein**~~ → FreeKnight_v1 Pack (120×80 Frames) + setScale(2). Pupkin Player verworfen.
+2. ~~**Player-Animationsframes falsch**~~ → FreeKnight hat saubere Frames ohne Text-Labels. Idle + Run funktionieren.
+3. ~~**Raum nicht zentriert**~~ → Layer-Scale 2× füllt den Screen (20×11 Tiles × 64px = 1280×704).
+5. ~~**Keine Wand-Varianten**~~ → TOP, LEFT, RIGHT als eigene Tiles; BLOCK für Corners, Pillars, Bottom.
+6. ~~**Keine Props**~~ → 3 statische Props platziert (Monitor, Green Tank, Blue Screen).
 
-## Lösung
-- TestScene enthält bereits Tileset-Debug-Grid mit Index-Nummern
-- TestScene als erste Scene starten, Tile-Indices ablesen
-- DungeonGenerator.ts mit korrekten Indices updaten
-- Player: entweder x2 Asset nutzen oder `setScale(2)` auf dem Sprite
-- Player-Animationsframes visuell verifizieren und korrigieren
+## Offen (niedrige Priorität)
+4. **Floor ist Dark Rectangle** — Pupkin blaue Tech-Tiles sind transparent (Overlays, kein Solid Floor). Aktuell 0x12121e Rechteck. Sieht akzeptabel aus, aber echte Floor-Tiles wären besser.
+7. **Bottom-Wall nutzt BLOCK-Fallback** — ti(4,6)=226 ist leer im Tileset. Dediziertes Bottom-Tile noch nicht gefunden.
 
-## Betroffene Dateien
-- `src/systems/DungeonGenerator.ts`
-- `src/entities/Player.ts`
-- `src/scenes/GameScene.ts`
-- `src/scenes/BootScene.ts` (falls x2 Assets geladen werden)
+## Ursachenanalyse: Pupkin Player
+Das Pupkin Player-Sheet (`players blue x1.png`, 40×32 Cells) hat **Text-Labels als Pixel in die Sprites eingebacken**. Jede Row enthält Sprite-Frames + rote Text-Frames ("Idle", "Run", etc.) im selben Grid. Das macht Frame-Indexing fehleranfällig und verhindert saubere Animationen. Die Entscheidung war, auf FreeKnight_v1 zu wechseln (separate Sheets pro Animation, konsistente 120×80 Frames, professionelles Sprite-Design).
+
+## Betroffene Dateien (alle bereits aktualisiert)
+- `src/systems/DungeonGenerator.ts` — Raum mit verifizierten Tile-Indices
+- `src/entities/Player.ts` — FreeKnight-basiert
+- `src/scenes/GameScene.ts` — Props, Shadow, Dust
+- `src/scenes/BootScene.ts` — FreeKnight Spritesheets laden

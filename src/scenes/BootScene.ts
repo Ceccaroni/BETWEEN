@@ -73,6 +73,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('scene') === 'tileset') {
+      this.scene.start('TilesetViewer');
+      return;
+    }
     this.scene.start('SplashScene');
   }
 

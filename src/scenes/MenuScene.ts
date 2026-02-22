@@ -106,6 +106,7 @@ export class MenuScene extends Phaser.Scene {
     kb.on('keydown-S', () => this.navigate(1));
     kb.on('keydown-ENTER', () => this.confirm());
     kb.on('keydown-SPACE', () => this.confirm());
+    kb.on('keydown-T', () => this.scene.start('TilesetViewer'));
   }
 
   private navigate(dir: number): void {

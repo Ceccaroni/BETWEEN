@@ -9,6 +9,7 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { CreditsScene } from './scenes/CreditsScene';
 import { SettingsScene } from './scenes/SettingsScene';
 import { TestScene } from './scenes/TestScene';
+import { TilesetViewer } from './scenes/TilesetViewer';
 
 /** Phaser game configuration and entry point. */
 const config: Phaser.Types.Core.GameConfig = {
@@ -29,7 +30,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, SplashScene, TitleScene, MenuScene, GameScene, GameOverScene, CreditsScene, SettingsScene, TestScene],
+  scene: [BootScene, SplashScene, TitleScene, MenuScene, GameScene, GameOverScene, CreditsScene, SettingsScene, TestScene, TilesetViewer],
 };
 
 new Phaser.Game(config);

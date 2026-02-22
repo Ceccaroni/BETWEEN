@@ -65,3 +65,27 @@
 **Entscheid:** Connected-Component-Analyse (BFS Flood Fill) statt festes Grid für Idle-Sheet
 **Warum:** Das KI-generierte Idle-Sheet hatte Charaktere in unregelmässigen Positionen (~365×520px pro Charakter), die nicht auf das 352×384 Grid des Run-Sheets passten. Festes Slicing schnitt Charaktere in der Mitte durch. Blob-Detection findet die tatsächlichen Charakter-Bounding-Boxes, skaliert sie auf die Run-Charakter-Grösse (188×293px) und platziert sie zentriert in sauberen 352×384 Frames.
 **Ergebnis:** Idle und Run Sheets haben jetzt identische Frame-Grössen und konsistente Charakter-Proportionen.
+
+## 2026-02-22: Player-Charakter — finaler Entscheid
+**Entscheid:** Hero Wizard bleibt der Spieler-Charakter. Kein weiterer Wechsel.
+**Warum:** High-Res Spritesheets (352×384) funktionieren, Idle + Run sind sauber, Adrian liefert bei Bedarf weitere Posen (Attack, Death, Dash etc.). FreeKnight-Assets nach `_unused/` verschoben.
+
+## 2026-02-22: Enemies — DungeonAssetPack (64×64)
+**Entscheid:** Gegner kommen aus dem DungeonAssetPack, 64×64 Sprites mit sauberen Sheets.
+**Warum:** Einheitlicher Stil, keine eingebackenen Text-Labels wie beim Pupkin Player-Sheet. Grössere Sprites passen besser zum Hero Wizard.
+
+## 2026-02-22: Floor-Rendering — Solid Color + Noise
+**Entscheid:** Floor ist Solid Color (`0x12121e`), später ergänzt durch ein Noise-Pattern.
+**Warum:** Pupkin Floor-Tiles sind transparent by design. Solid Rectangle ist die korrekte Lösung, kein Bug. Noise-Pattern kommt als visuelles Upgrade, wenn die Basis steht.
+
+## 2026-02-22: Wall-Tiles — manuell per TilesetViewer gewählt
+**Entscheid:** Wall-Tile-Indices werden manuell über den TilesetViewer identifiziert und in `DungeonGenerator.ts` hartcodiert.
+**Warum:** Kein automatisches Matching möglich — welche Tiles gut aussehen ist eine Design-Entscheidung. TilesetViewer (`?scene=tileset` / T-Taste) zeigt alle Tiles mit (col,row)-Index.
+
+## 2026-02-22: Tile-Grösse — 32×32 base, Scale 2×
+**Entscheid:** Tiles bleiben 32×32 aus dem Pack. Display über `layer.setScale(2)` → 64×64 im Spiel.
+**Warum:** Pack liefert nur 32×32. Camera-Zoom schneidet Ränder ab (siehe Entscheid 2026-02-21). Layer-Scale ist die saubere Lösung.
+
+## 2026-02-22: Inaktive Assets — _unused/ Ordner
+**Entscheid:** Nicht mehr genutzte Assets werden nach `public/assets/_unused/` verschoben statt gelöscht.
+**Warum:** Assets könnten später für andere Biome oder als Referenz nützlich sein. Löschen ist irreversibel, Verschieben nicht.

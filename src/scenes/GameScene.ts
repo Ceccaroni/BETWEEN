@@ -1,28 +1,43 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
+import { Door } from '../entities/Door';
 import { InputSystem } from '../systems/InputSystem';
 import { DungeonGenerator, RoomData } from '../systems/DungeonGenerator';
 import { PropManager } from '../systems/PropManager';
 import { ProjectilePool } from '../systems/ProjectilePool';
+import { CombatManager } from '../systems/CombatManager';
+import { RoomClearManager } from '../systems/RoomClearManager';
+import { RunState, WallSide, oppositeSide } from '../systems/RunState';
 import { Crosshair } from '../ui/Crosshair';
+import { HUD } from '../ui/HUD';
 import { createAfterimage } from '../effects/Afterimage';
+import { TILE_DISPLAY, ROOM_W_TILES, ROOM_H_TILES } from '../utils/Constants';
 
-/** Effective tile display size (32×2 = 64). */
-const TILE_DISPLAY = 64;
-const ROOM_W_TILES = 20;
-const ROOM_H_TILES = 11;
-
-/** Main gameplay scene: room + player + shooting + camera + atmosphere. */
+/** Main gameplay scene: room lifecycle, player, combat, transitions. */
 export class GameScene extends Phaser.Scene {
+  // --- PERSISTENT (survive room transitions) ---
   private player!: Player;
+  private playerShadow!: Phaser.GameObjects.Ellipse;
   private inputSystem!: InputSystem;
-  private room!: RoomData;
-  private dustEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
-  private lastDirX = 0;
   private crosshair!: Crosshair;
   private projectilePool!: ProjectilePool;
+  private hud!: HUD;
+  private runState!: RunState;
+  private dustEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private lastDirX = 0;
   private afterimageTimer = 0;
+
+  // --- PER-ROOM (destroyed and rebuilt each room) ---
+  private room!: RoomData;
+  private combatManager!: CombatManager;
+  private roomClearManager!: RoomClearManager;
+  private exitDoor: Door | null = null;
+  private roomProps: Phaser.GameObjects.GameObject[] = [];
+  private roomColliders: Phaser.Physics.Arcade.Collider[] = [];
+  private ambientEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
+  private vignetteGfx: Phaser.GameObjects.Graphics | null = null;
+  private isTransitioning = false;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -32,42 +47,37 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#0a0a12');
     this.cameras.main.fadeIn(500);
 
-    this.room = DungeonGenerator.createRoom(this);
+    // Initialize run state
+    this.runState = new RunState();
 
-    this.player = new Player(this, this.room.spawnX, this.room.spawnY);
+    // --- Persistent setup (once per run) ---
+    this.createDustEmitter();
 
-    const shadow = this.add.ellipse(0, 0, 28, 8, 0x000000, 0.35);
-    shadow.setDepth(9);
-    this.player.setData('shadow', shadow);
+    // Player at room center for first room
+    const spawnX = (ROOM_W_TILES * TILE_DISPLAY) / 2;
+    const spawnY = (ROOM_H_TILES * TILE_DISPLAY) / 2;
+    this.player = new Player(this, spawnX, spawnY);
 
-    this.physics.add.collider(this.player, this.room.wallLayer);
-
-    PropManager.placeAll(this);
+    this.playerShadow = this.add.ellipse(0, 0, 28, 8, 0x000000, 0.35);
+    this.playerShadow.setDepth(9);
 
     this.inputSystem = new InputSystem(this);
     this.crosshair = new Crosshair(this);
     this.projectilePool = new ProjectilePool(this);
+    this.hud = new HUD(this);
 
-    // Projectiles destroy on wall hit
-    this.physics.add.collider(
-      this.projectilePool.getGroup(),
-      this.room.wallLayer,
-      (_proj) => {
-        const p = _proj as Projectile;
-        this.spawnWallImpact(p.x, p.y);
-        p.deactivate();
-      }
-    );
+    // Build first room
+    this.buildRoom();
 
-    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-    this.cameras.main.setBounds(0, 0, this.room.widthPx, this.room.heightPx);
-
-    this.createDustEmitter();
-    this.createAmbientParticles();
-    this.createVignette();
+    // Listen for door transitions
+    this.events.on('door-entered', (exitSide: WallSide) => {
+      this.transitionToNextRoom(exitSide);
+    });
   }
 
   update(_time: number, delta: number): void {
+    if (this.isTransitioning) return;
+
     this.player.updateTimers(delta);
 
     const dir = this.inputSystem.getDirection();
@@ -82,7 +92,6 @@ export class GameScene extends Phaser.Scene {
     // Dash input
     if (this.inputSystem.isDashPressed()) {
       if (this.player.dash(dir.x, dir.y)) {
-        // Dust burst at dash start
         this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 26, 10);
         this.afterimageTimer = 0;
       }
@@ -108,10 +117,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.projectilePool.update();
+    this.combatManager.update(delta);
+    this.roomClearManager.update();
+    this.hud.update(delta);
 
     // Shadow follows player feet
-    const shadow = this.player.getData('shadow') as Phaser.GameObjects.Ellipse;
-    shadow.setPosition(this.player.x, this.player.y + 26);
+    this.playerShadow.setPosition(this.player.x, this.player.y + 26);
 
     const vx = this.player.body?.velocity.x ?? 0;
     const vy = this.player.body?.velocity.y ?? 0;
@@ -129,6 +140,220 @@ export class GameScene extends Phaser.Scene {
     }
     this.lastDirX = dir.x;
   }
+
+  // ========== ROOM LIFECYCLE ==========
+
+  /** Builds a new room: geometry, props, enemies, door, atmosphere. */
+  private buildRoom(): void {
+    const roomNum = this.runState.roomNumber;
+    const entrySide = this.runState.lastExitSide
+      ? oppositeSide(this.runState.lastExitSide)
+      : null;
+    const exitSide = this.pickExitSide(entrySide);
+
+    // Generate room with wall gaps
+    this.room = DungeonGenerator.createRoom(this, {
+      entrySide,
+      exitSide,
+      proceduralObstacles: true,
+      roomNumber: roomNum,
+    });
+
+    // Player-wall collision
+    this.roomColliders.push(
+      this.physics.add.collider(this.player, this.room.wallLayer)
+    );
+
+    // Props
+    this.roomProps = PropManager.placeAll(this);
+
+    // Projectile-wall collision
+    this.roomColliders.push(
+      this.physics.add.collider(
+        this.projectilePool.getGroup(),
+        this.room.wallLayer,
+        (_proj) => {
+          const p = _proj as Projectile;
+          this.spawnWallImpact(p.x, p.y);
+          p.deactivate();
+        }
+      )
+    );
+
+    // Combat system
+    this.combatManager = new CombatManager(
+      this,
+      this.player,
+      this.projectilePool,
+      this.room.wallLayer,
+      this.runState.playerHP
+    );
+    this.combatManager.spawnWave(roomNum);
+
+    // Exit door (hidden until room clear)
+    this.exitDoor = new Door(this, exitSide);
+
+    // Door overlap with player (argument swap protection)
+    this.roomColliders.push(
+      this.physics.add.overlap(
+        this.player,
+        this.exitDoor,
+        (objA, objB) => {
+          const door = (objA === this.player ? objB : objA) as Door;
+          door.playerEntered();
+        }
+      )
+    );
+
+    // Room clear manager (with door reference)
+    this.roomClearManager = new RoomClearManager(this, this.combatManager, this.exitDoor);
+
+    // Camera
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+    this.cameras.main.setBounds(0, 0, this.room.widthPx, this.room.heightPx);
+
+    // Atmosphere
+    this.ambientEmitter = this.createAmbientParticles();
+    this.vignetteGfx = this.createVignette();
+
+    // Room indicator + HUD sync
+    this.showRoomIndicator(roomNum);
+    this.hud.setRoomNumber(roomNum, this.runState.totalRooms);
+    this.hud.setHP(this.runState.playerHP);
+  }
+
+  /** Tears down all per-room objects, preserving persistent ones. */
+  private teardownRoom(): void {
+    // Safety: reset timeScale in case enemy death freeze-frame is active
+    this.time.timeScale = 1;
+
+    // Remove per-room event listeners
+    this.events.off('room-cleared');
+
+    // Combat cleanup (enemies, colliders, projectiles, listeners)
+    this.combatManager.cleanup();
+
+    // Clear player projectiles
+    this.projectilePool.clearAll();
+
+    // Destroy door
+    if (this.exitDoor) {
+      this.exitDoor.destroy();
+      this.exitDoor = null;
+    }
+
+    // Destroy props
+    PropManager.destroyAll(this.roomProps);
+    this.roomProps = [];
+
+    // Destroy room geometry
+    DungeonGenerator.destroyRoom(this.room);
+
+    // Destroy atmosphere
+    if (this.ambientEmitter) {
+      this.ambientEmitter.destroy();
+      this.ambientEmitter = null;
+    }
+    if (this.vignetteGfx) {
+      this.vignetteGfx.destroy();
+      this.vignetteGfx = null;
+    }
+
+    // Destroy per-room colliders (player-wall, projectile-wall, door overlap)
+    for (const c of this.roomColliders) {
+      c.destroy();
+    }
+    this.roomColliders = [];
+  }
+
+  /** Handles the transition from current room to the next. */
+  private transitionToNextRoom(exitSide: WallSide): void {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+
+    // Save player HP
+    this.runState.playerHP = this.combatManager.getPlayerHP();
+
+    // Advance run state
+    const entrySide = this.runState.advanceRoom(exitSide);
+
+    // Check if run is complete
+    if (this.runState.isRunComplete()) {
+      this.cameras.main.fade(800, 255, 255, 255, false, (_cam: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+        if (progress >= 1) {
+          this.scene.start('VictoryScene');
+        }
+      });
+      return;
+    }
+
+    // Fade to black
+    this.cameras.main.fade(400, 0, 0, 0, false, (_cam: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+      if (progress >= 1) {
+        // Teardown old room
+        this.teardownRoom();
+
+        // Cancel any active dash/iframes
+        this.player.cancelDash();
+
+        // Reposition player at entry point
+        const entryPos = Door.getEntryPosition(entrySide);
+        this.player.setPosition(entryPos.x, entryPos.y);
+        this.player.setVelocity(0, 0);
+
+        // Build new room
+        this.buildRoom();
+
+        // Brief invulnerability on room entry
+        this.player.startIFrames();
+
+        // Fade in
+        this.cameras.main.fadeIn(400);
+        this.isTransitioning = false;
+      }
+    });
+  }
+
+  /** Picks a random exit side different from the entry side. */
+  private pickExitSide(entrySide: WallSide | null): WallSide {
+    const sides: WallSide[] = ['top', 'bottom', 'left', 'right'];
+    const available = entrySide
+      ? sides.filter((s) => s !== entrySide)
+      : sides;
+    return available[Phaser.Math.Between(0, available.length - 1)];
+  }
+
+  /** Shows a brief room number indicator. */
+  private showRoomIndicator(roomNum: number): void {
+    const isBoss = this.runState.isBossRoom();
+    const label = isBoss ? 'BOSS ROOM' : `ROOM ${roomNum}`;
+    const color = isBoss ? '#ff4444' : '#aaaaaa';
+
+    const text = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2 - 80,
+      label,
+      {
+        fontFamily: 'monospace',
+        fontSize: '32px',
+        color,
+        stroke: '#000000',
+        strokeThickness: 4,
+      }
+    );
+    text.setOrigin(0.5).setScrollFactor(0).setDepth(150).setAlpha(0);
+
+    this.tweens.add({
+      targets: text,
+      alpha: 1,
+      duration: 300,
+      yoyo: true,
+      hold: 1000,
+      onComplete: () => text.destroy(),
+    });
+  }
+
+  // ========== VFX HELPERS ==========
 
   /** Brief white flash at the fire origin. */
   private createMuzzleFlash(x: number, y: number): void {
@@ -162,6 +387,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /** Creates the persistent dust particle emitter. */
   private createDustEmitter(): void {
     const gfx = this.add.graphics();
     gfx.fillStyle(0x888888, 1);
@@ -180,8 +406,8 @@ export class GameScene extends Phaser.Scene {
     this.dustEmitter.setDepth(11);
   }
 
-  /** Slow floating ambient motes for atmosphere. */
-  private createAmbientParticles(): void {
+  /** Creates ambient floating motes (per-room, returned for cleanup). */
+  private createAmbientParticles(): Phaser.GameObjects.Particles.ParticleEmitter {
     const gfx = this.add.graphics();
     gfx.fillStyle(0x556688, 1);
     gfx.fillCircle(2, 2, 2);
@@ -200,10 +426,11 @@ export class GameScene extends Phaser.Scene {
       quantity: 1,
     });
     emitter.setDepth(12);
+    return emitter;
   }
 
-  /** Dark-edge vignette overlay for mood. */
-  private createVignette(): void {
+  /** Creates dark-edge vignette overlay (per-room, returned for cleanup). */
+  private createVignette(): Phaser.GameObjects.Graphics {
     const w = this.room.widthPx;
     const h = this.room.heightPx;
     const gfx = this.add.graphics();
@@ -222,5 +449,6 @@ export class GameScene extends Phaser.Scene {
 
     gfx.setDepth(100);
     gfx.setScrollFactor(0);
+    return gfx;
   }
 }

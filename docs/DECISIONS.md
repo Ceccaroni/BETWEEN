@@ -137,6 +137,19 @@
 **Entscheid:** `startIFrames()` wird sowohl vom Dash als auch von Kontaktschaden aufgerufen. Gleiche Dauer (500ms), gleicher Blink-Effekt.
 **Warum:** Einheitliches System statt separate Invulnerability-Tracker. Dash gewährt automatisch I-Frames (wie in Nuclear Throne / Enter the Gungeon). Späterer Hit-iFrame nutzt den gleichen Code.
 
+## 2026-03-21: Freeze-Frame via window.setTimeout
+**Entscheid:** Hitstop bei Enemy-Kill nutzt `window.setTimeout` statt `scene.time.delayedCall` für die timeScale-Wiederherstellung.
+**Warum:** `scene.time.delayedCall` wird von `scene.time.timeScale` beeinflusst — bei 0.05× timeScale dauert ein 80ms-Delay 1600ms real. Schlimmer: wenn das Enemy-Sprite vor Ablauf des Delays destroyed wird, wird timeScale nie zurückgesetzt → permanenter Freeze. `window.setTimeout` läuft auf Wall-Clock-Time und ist immun gegen Phaser's timeScale.
+**Bug gefixed:** Erster Versuch mit `scene.time.timeScale = 0.1` + `delayedCall(80)` fror das Spiel beim ersten Enemy-Kill dauerhaft ein.
+
+## 2026-03-21: Enemy-Architektur — Abstrakte Basisklasse
+**Entscheid:** `Enemy.ts` als abstrakte Klasse, konkrete Enemies (Drone, Turret) erben davon.
+**Warum:** Gemeinsame Logik (HP, Knockback, Flash, Death-VFX, Shadow) wird einmal geschrieben. Jeder Enemy-Typ implementiert nur `updateAI()`. Skaliert auf 24+ Enemy-Typen im DungeonAssetPack.
+
+## 2026-03-21: CombatManager als zentrales System
+**Entscheid:** Alle Kampf-Kollisionen und Schadens-Logik in `CombatManager.ts`, nicht in GameScene.
+**Warum:** GameScene drohte das 200-Zeilen-Limit zu überschreiten. CombatManager kapselt: Projectile↔Enemy, Player↔Enemy, Enemy↔Wall, Enemy↔Enemy Kollisionen. Verwaltet Player-HP und Enemy-Spawning zentral.
+
 ## 2026-03-21: Floor-Grid statt Noise-Pattern
 **Entscheid:** Subtile Tech-Grid-Linien (1px, 0x334466, alpha 0.1) statt geplantes Noise-Pattern.
 **Warum:** Grid-Linien passen besser zur "Machine"-Ästhetik. Programmatisch einfach (Phaser Graphics), kein zusätzliches Asset nötig. Depth 0.5 (über Floor-Rechteck, unter Walls).
@@ -144,3 +157,42 @@
 ## 2026-03-21: Atmosphäre-Effekte
 **Entscheid:** Ambient-Partikel (schwebende Motes) + Vignette-Overlay in GameScene.
 **Warum:** Juice Policy verlangt Maximum bei visuellen Features. Motes erzeugen lebendige Atmosphäre, Vignette fokussiert den Blick auf die Raum-Mitte. Beide sind performance-günstig (wenige Partikel, statische Graphics).
+
+## 2026-03-21: Turret-Telegraph via Graphics statt Sprite
+**Entscheid:** Telegraph-Linie wird mit Phaser Graphics gezeichnet (rote Linie, pulsierender Alpha 0.3-0.8), nicht als Sprite.
+**Warum:** Flexible Länge/Rotation, kein Extra-Asset nötig. Pulsierender Alpha macht die Intention klar ohne den Bildschirm zu dominieren. Winkel wird bei Telegraph-Start gelockt — Spieler kann ausweichen.
+
+## 2026-03-21: EnemyProjectilePool als separates System
+**Entscheid:** Eigener Pool für Gegner-Projektile (15 Sprites) statt gemeinsamer Pool mit Spieler.
+**Warum:** Farblich unterscheidbar (cyan vs. grün), unterschiedliche Geschwindigkeit (300 vs. 500), separate Kollisions-Logik (trifft Spieler, nicht Gegner). `clearAll()` kann bei Room Clear nur Gegner-Projektile entfernen.
+
+## 2026-03-21: HUD-Herzen prozedural gezeichnet
+**Entscheid:** Herzen werden per Phaser Graphics gezeichnet (2 Kreise + Dreieck), nicht als Sprite-Asset.
+**Warum:** Kein Asset-Abhängigkeit, dynamische Farb-Zustände (voll=rot, halb=halbiert, leer=dunkel) ohne mehrere Sprites. Bounce- und Jitter-Effekte direkt auf dem Graphics-Objekt via Tweens.
+
+## 2026-03-21: Room Clear via window.setTimeout für Slow-Mo
+**Entscheid:** Slow-Mo bei Room Clear nutzt `window.setTimeout` für timeScale-Wiederherstellung (gleich wie Enemy-Death Freeze-Frame).
+**Warum:** Konsistenz mit bestehendem Freeze-Frame-Pattern. `scene.time.delayedCall` ist von `timeScale` betroffen und würde den Slow-Mo verlängern. Bewährtes Pattern aus Phase 2.
+
+## 2026-03-21: Event-basierte HUD-Aktualisierung
+**Entscheid:** CombatManager emittiert `player-hp-changed` Event, HUD hört darauf.
+**Warum:** Lose Kopplung — HUD muss CombatManager nicht kennen und umgekehrt. Phaser Events sind performant und erlauben beliebig viele Listener (z.B. später Sound-Effekte bei Schaden).
+
+## 2026-03-21: In-Scene Room Cycling statt Scene Restart
+**Entscheid:** Raum-Transitionen durch Destroy/Rebuild innerhalb von GameScene, nicht via `scene.restart()`.
+**Warum:** `scene.restart()` zerstört ALLE Objekte inkl. Player, HUD, InputSystem, Projectile Pools. Das erfordert Serialisierung/Deserialisierung von Player-State (HP, Dash-Timer, I-Frames) über Scene-Data. In-Scene Cycling trennt persistente Objekte (Player, HUD, Pools) von per-Room Objekten (Tilemap, Enemies, Props, Door) und recycled erstere.
+**Risiko:** Collider-Leaks, Event-Listener-Leaks, Tilemap-Name-Kollisionen. Mitigiert durch explizites Collider-Tracking, `cleanup()`-Methoden, und unique Layer-Namen.
+
+## 2026-03-21: Prozedurale Raum-Layouts mit Flood-Fill
+**Entscheid:** 4-7 zufällige Pillar-Positionen pro Raum, validiert durch BFS Flood-Fill.
+**Warum:** Spieler wählte "Procedural layouts" für maximale Wiederspielbarkeit. Fixed Layouts (Templating) wäre einfacher aber repetitiv. Flood-Fill garantiert dass Entry-Gap und Exit-Gap immer erreichbar sind — kein softlock möglich.
+**Alternativen verworfen:** Feste 4-Pillar-Positionen (monoton), Wave Function Collapse (overengineered für 20×11 Räume)
+
+## 2026-03-21: Linearer Run mit randomisierter Exit-Wand
+**Entscheid:** 6 Räume linear (kein Branching), aber Exit-Tür auf zufälliger Wand (verschieden von Entry).
+**Warum:** Linear ist einfach für erste Implementierung, randomisierte Wand-Seite gibt trotzdem Abwechslung in der Bewegungsrichtung. Entry ist immer gegenüber dem vorherigen Exit.
+**Alternativen verworfen:** Immer rechts raus (monoton), 4-Direktionales Grid (zu komplex für V1)
+
+## 2026-03-21: Door Asset — door#2 (32×32, 16 Frames)
+**Entscheid:** `door#2_32x32-Sheet.png` als Tür-Sprite, URL-safe kopiert zu `door2-32x32-Sheet.png`.
+**Warum:** 32×32 bei 2× Scale = 64×64 Display, passt exakt in eine Tile-Position. 16-Frame Öffnungs-Animation gibt gutes visuelles Feedback. door#1 (32×64, 2 Tiles hoch) wäre für Side-Walls gut aber inkonsistent mit Top/Bottom-Walls.

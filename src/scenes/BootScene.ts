@@ -88,6 +88,32 @@ export class BootScene extends Phaser.Scene {
       frameHeight: 32,
     });
 
+    // --- DungeonAssetPack Enemies ---
+    // ASSET-REGISTRY: Green_mucus-64x64-Sheet.png, 512×64, 64×64 cells, 8 frames
+    this.load.spritesheet('enemy-drone', 'assets/packs/dungeon-asset-pack/enemies/Green_mucus-64x64-Sheet.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+
+    // ASSET-REGISTRY: Witch_64x64-Sheet.png, 512×64, 64×64 cells, 8 frames
+    this.load.spritesheet('enemy-turret', 'assets/packs/dungeon-asset-pack/enemies/Witch_64x64-Sheet.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+
+    // --- DungeonAssetPack Doors ---
+    // ASSET-REGISTRY: door2-32x32-Sheet.png, 512×32, 32×32 cells, 16 frames
+    this.load.spritesheet('dap-door', 'assets/packs/dungeon-asset-pack/props/door2-32x32-Sheet.png', {
+      frameWidth: 32, frameHeight: 32,
+    });
+
+    // --- DungeonAssetPack VFX ---
+    // ASSET-REGISTRY: hurt_vfx64x64-Sheet.png, 640×64, 64×64 cells, 10 frames
+    this.load.spritesheet('vfx-hurt', 'assets/packs/dungeon-asset-pack/vfx/hurt_vfx64x64-Sheet.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+
     // Audio
     this.load.audio('title-theme', 'assets/audio/music/title-theme.mp3');
     // menu-select.mp3 and menu-confirm.mp3 not yet created — add when available

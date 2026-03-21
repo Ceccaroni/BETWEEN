@@ -142,6 +142,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return true;
   }
 
+  /** Cancels any active dash and resets state (used on room transitions). */
+  cancelDash(): void {
+    this.isDashing = false;
+    this.dashTimer = 0;
+    this.dashCooldownTimer = 0;
+    this.invulnerable = false;
+    this.iframeTimer = 0;
+    this.setAlpha(1.0);
+    this.setVelocity(0, 0);
+  }
+
   /** Starts invulnerability frames (used by dash and on-hit). */
   startIFrames(): void {
     this.invulnerable = true;

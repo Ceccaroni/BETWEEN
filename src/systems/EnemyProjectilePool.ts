@@ -1,18 +1,17 @@
 import Phaser from 'phaser';
 import { Projectile } from '../entities/Projectile';
-import { PROJECTILE_SPEED, FIRE_RATE_MS } from '../utils/Constants';
+import { ENEMY_PROJECTILE_SPEED } from '../utils/Constants';
 
-/** Player projectile start frame (green energy bolt, row 0). */
-const PLAYER_BOLT_FRAME = 0;
+/** Enemy projectile start frame (cyan energy bolt, row 1). */
+const ENEMY_BOLT_FRAME = 5;
 
 /**
- * Object pool for player projectiles. Pre-allocates 20 sprites,
- * enforces fire-rate cooldown, and provides the physics group for collision.
+ * Object pool for enemy projectiles. Pre-allocates 15 sprites,
+ * uses cyan bolts (frames 5-7) visually distinct from player green.
  */
-export class ProjectilePool {
+export class EnemyProjectilePool {
   private scene: Phaser.Scene;
   private pool: Phaser.Physics.Arcade.Group;
-  private lastFireTime = 0;
   private trailEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor(scene: Phaser.Scene) {
@@ -20,11 +19,11 @@ export class ProjectilePool {
 
     this.pool = scene.physics.add.group({
       classType: Projectile,
-      maxSize: 20,
+      maxSize: 15,
       runChildUpdate: true,
     });
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 15; i++) {
       const p = new Projectile(scene, -100, -100);
       this.pool.add(p, true);
     }
@@ -32,16 +31,12 @@ export class ProjectilePool {
     this.trailEmitter = this.createTrailEmitter();
   }
 
-  /** Attempts to fire a projectile. Returns true if one was fired. */
-  tryFire(x: number, y: number, angle: number): boolean {
-    const now = this.scene.time.now;
-    if (now - this.lastFireTime < FIRE_RATE_MS) return false;
-
+  /** Fires an enemy projectile from (x, y) at the given angle. */
+  fire(x: number, y: number, angle: number): boolean {
     const proj = this.pool.getFirstDead(false) as Projectile | null;
     if (!proj) return false;
 
-    proj.fire(x, y, angle, PROJECTILE_SPEED, PLAYER_BOLT_FRAME);
-    this.lastFireTime = now;
+    proj.fire(x, y, angle, ENEMY_PROJECTILE_SPEED, ENEMY_BOLT_FRAME);
     return true;
   }
 
@@ -50,7 +45,7 @@ export class ProjectilePool {
     return this.pool;
   }
 
-  /** Deactivates all active projectiles (used on room transition). */
+  /** Deactivates all active projectiles (used on room clear). */
   clearAll(): void {
     this.pool.getChildren().forEach((child) => {
       const p = child as Projectile;
@@ -58,7 +53,7 @@ export class ProjectilePool {
     });
   }
 
-  /** Emits trail particles from all active projectiles. */
+  /** Emits cyan trail particles from all active projectiles. */
   update(): void {
     this.pool.getChildren().forEach((child) => {
       const p = child as Projectile;
@@ -68,15 +63,15 @@ export class ProjectilePool {
     });
   }
 
-  /** Creates the shared trail particle emitter for projectiles. */
+  /** Creates the shared cyan trail emitter for enemy projectiles. */
   private createTrailEmitter(): Phaser.GameObjects.Particles.ParticleEmitter {
     const gfx = this.scene.add.graphics();
-    gfx.fillStyle(0x44ff88, 1);
+    gfx.fillStyle(0x44ccff, 1);
     gfx.fillCircle(2, 2, 2);
-    gfx.generateTexture('proj-trail', 4, 4);
+    gfx.generateTexture('enemy-proj-trail', 4, 4);
     gfx.destroy();
 
-    const emitter = this.scene.add.particles(0, 0, 'proj-trail', {
+    const emitter = this.scene.add.particles(0, 0, 'enemy-proj-trail', {
       speed: { min: 5, max: 15 },
       scale: { start: 0.8, end: 0 },
       alpha: { start: 0.6, end: 0 },

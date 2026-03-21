@@ -87,9 +87,10 @@ export class PropManager {
     }
   }
 
-  /** Places all props (machine + static + animated) in the room. */
-  static placeAll(scene: Phaser.Scene): void {
+  /** Places all props in the room. Returns array for cleanup. */
+  static placeAll(scene: Phaser.Scene): Phaser.GameObjects.GameObject[] {
     PropManager.registerAnimations(scene);
+    const created: Phaser.GameObjects.GameObject[] = [];
 
     for (const p of MACHINE_PROPS) {
       const s = scene.add.sprite(
@@ -97,6 +98,7 @@ export class PropManager {
         'machine-props', p.frame
       );
       s.setScale(2).setDepth(5);
+      created.push(s);
     }
 
     for (const p of STATIC_PROPS) {
@@ -104,6 +106,7 @@ export class PropManager {
         p.tileX * TD + TD / 2, p.tileY * TD + TD / 2, p.key
       );
       s.setScale(2).setDepth(p.depth);
+      created.push(s);
     }
 
     for (const p of ANIM_PROPS) {
@@ -112,6 +115,16 @@ export class PropManager {
       );
       s.setScale(2).setDepth(p.depth);
       s.play(p.animKey);
+      created.push(s);
+    }
+
+    return created;
+  }
+
+  /** Destroys all props created by placeAll(). */
+  static destroyAll(props: Phaser.GameObjects.GameObject[]): void {
+    for (const p of props) {
+      p.destroy();
     }
   }
 }

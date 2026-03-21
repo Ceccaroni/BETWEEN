@@ -33,3 +33,31 @@ export const DASH_COOLDOWN_MS = 800;
 
 /** Invulnerability window after taking a hit, in ms */
 export const IFRAME_DURATION_MS = 500;
+
+/** Enemy projectile travel speed in px/s */
+export const ENEMY_PROJECTILE_SPEED = 300;
+
+/** Damage per enemy projectile hit */
+export const ENEMY_PROJECTILE_DAMAGE = 2;
+
+/** Turret enemy HP */
+export const TURRET_HP = 9;
+
+/** Turret fire interval in ms */
+export const TURRET_FIRE_INTERVAL_MS = 2000;
+
+/** Turret telegraph duration before firing in ms */
+export const TURRET_TELEGRAPH_MS = 500;
+
+/** Total rooms per run (5 combat + 1 boss). */
+export const ROOMS_PER_RUN = 6;
+
+/** Room dimensions in tiles. */
+export const ROOM_W_TILES = 20;
+export const ROOM_H_TILES = 11;
+
+/** Display scale for tiles (32px tiles rendered at 64px). */
+export const TILE_DISPLAY_SCALE = 2;
+
+/** Effective tile display size in world pixels. */
+export const TILE_DISPLAY = TILE_SIZE * TILE_DISPLAY_SCALE;

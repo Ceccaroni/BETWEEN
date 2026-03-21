@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
 
-/** Handles WASD + Arrow key input for 8-direction movement. */
+/** Handles WASD + Arrow key input for movement, firing, and dash. */
 export class InputSystem {
+  private scene: Phaser.Scene;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+  private spaceKey: Phaser.Input.Keyboard.Key;
 
   constructor(scene: Phaser.Scene) {
+    this.scene = scene;
     const kb = scene.input.keyboard!;
     this.cursors = kb.createCursorKeys();
     this.wasd = {
@@ -14,6 +17,7 @@ export class InputSystem {
       S: kb.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       D: kb.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
+    this.spaceKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
 
   /** Returns normalized direction vector { x, y } from current input. */
@@ -27,5 +31,21 @@ export class InputSystem {
     if (this.cursors.down.isDown || this.wasd.S.isDown) y += 1;
 
     return { x, y };
+  }
+
+  /** Returns true while the fire button (left mouse) is held. */
+  isFireDown(): boolean {
+    return this.scene.input.activePointer.isDown;
+  }
+
+  /** Returns true on the frame space bar is first pressed. */
+  isDashPressed(): boolean {
+    return Phaser.Input.Keyboard.JustDown(this.spaceKey);
+  }
+
+  /** Returns pointer position in world space. */
+  getPointerWorld(): Phaser.Math.Vector2 {
+    const p = this.scene.input.activePointer;
+    return this.scene.cameras.main.getWorldPoint(p.x, p.y);
   }
 }

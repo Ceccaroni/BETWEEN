@@ -23,17 +23,43 @@ export class BootScene extends Phaser.Scene {
       frameHeight: 32,
     });
 
-    // ASSET-REGISTRY: hero-wizard-idle.png, 2112×768, 352×384 cells, 6×2=12 frames — idle cycle
-    this.load.spritesheet('hero-wizard-idle', 'assets/characters/hero-wizard/hero-wizard-idle.png', {
-      frameWidth: 352,
-      frameHeight: 384,
+    // --- Hero Wizard (backup, commented out for hero-warrior swap) ---
+    // ASSET-REGISTRY: hero-wizard-idle.png, 2112×768, 352×384 cells, 12 frames
+    // this.load.spritesheet('hero-wizard-idle', 'assets/characters/hero-wizard/hero-wizard-idle.png', {
+    //   frameWidth: 352, frameHeight: 384,
+    // });
+    // ASSET-REGISTRY: hero-wizard-run.png, 2816×1536, 352×384 cells, 32 frames
+    // this.load.spritesheet('hero-wizard-run', 'assets/characters/hero-wizard/hero-wizard-run.png', {
+    //   frameWidth: 352, frameHeight: 384,
+    // });
+
+    // ASSET-REGISTRY: hero-warrior.png, 576×64, 64×64 cells, 9 frames (Idle 0-3, Run 4-6, Attack 7-8)
+    this.load.spritesheet('hero-warrior', 'assets/packs/dungeon-asset-pack/hero/hero-warrior.png', {
+      frameWidth: 64,
+      frameHeight: 64,
     });
 
-    // ASSET-REGISTRY: hero-wizard-run.png, 2816×1536, 352×384 cells, 32 frames — run cycle
-    this.load.spritesheet('hero-wizard-run', 'assets/characters/hero-wizard/hero-wizard-run.png', {
-      frameWidth: 352,
-      frameHeight: 384,
+    // --- DungeonAssetPack Props ---
+    // ASSET-REGISTRY: bonfire-32x32-Sheet.png, 256×32, 32×32 cells, 8 frames
+    this.load.spritesheet('dap-bonfire', 'assets/packs/dungeon-asset-pack/props/bonfire-32x32-Sheet.png', {
+      frameWidth: 32, frameHeight: 32,
     });
+    // ASSET-REGISTRY: candle-32x32-Sheet.png, 256×32, 32×32 cells, 8 frames
+    this.load.spritesheet('dap-candle', 'assets/packs/dungeon-asset-pack/props/candle-32x32-Sheet.png', {
+      frameWidth: 32, frameHeight: 32,
+    });
+    // ASSET-REGISTRY: candle2-32x32-Sheet.png, 256×32, 32×32 cells, 8 frames (copied from candle#2)
+    this.load.spritesheet('dap-candle2', 'assets/packs/dungeon-asset-pack/props/candle2-32x32-Sheet.png', {
+      frameWidth: 32, frameHeight: 32,
+    });
+    // ASSET-REGISTRY: chest-32x32-Sheet.png, 320×32, 32×32 cells, 10 frames
+    this.load.spritesheet('dap-chest', 'assets/packs/dungeon-asset-pack/props/chest-32x32-Sheet.png', {
+      frameWidth: 32, frameHeight: 32,
+    });
+    // ASSET-REGISTRY: cargo_box.png, 32×32, static
+    this.load.image('dap-cargo-box', 'assets/packs/dungeon-asset-pack/props/cargo_box.png');
+    // ASSET-REGISTRY: wooden-barrel.png, 32×32, static (copied from "wooden barrel.png")
+    this.load.image('dap-barrel', 'assets/packs/dungeon-asset-pack/props/wooden-barrel.png');
 
     // ASSET-REGISTRY: enemies.png, 320×1216, 32×32 cells, 10 cols × 38 rows (Pack: 10x38 Cells)
     this.load.spritesheet('machine-enemies', 'assets/enemies/machine/enemies.png', {

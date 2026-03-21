@@ -21,7 +21,7 @@ const WALL = {
   TOP: ti(4, 0),     // 4   — top edge (confirmed visible)
   LEFT: ti(1, 3),    // 112 — left edge (confirmed visible)
   RIGHT: ti(9, 4),   // 157 — right edge (confirmed visible)
-  BOT: ti(4, 6),     // 226 — bottom edge
+  BOT: ti(4, 7),     // 263 — bottom edge (row 7, not row 6 which is empty)
   BLOCK: ti(3, 0),   // 3   — solid grey block (safe fallback for corners/pillars)
 };
 
@@ -61,6 +61,9 @@ export class DungeonGenerator {
       (ROOM_HEIGHT - 2) * WTS,
       0x12121e
     ).setDepth(0);
+
+    // Subtle tech-grid overlay on floor
+    DungeonGenerator.createFloorGrid(scene);
 
     // Tilemap (internal 32×32, displayed at 64×64 via layer scale)
     const map = scene.make.tilemap({
@@ -104,7 +107,7 @@ export class DungeonGenerator {
     // Top and bottom edges
     for (let x = 1; x < w - 1; x++) {
       layer.putTileAt(WALL.TOP, x, 0);
-      layer.putTileAt(WALL.BLOCK, x, h - 1); // BOT tile empty, use BLOCK fallback
+      layer.putTileAt(WALL.BOT, x, h - 1);
     }
 
     // Left and right edges
@@ -119,5 +122,25 @@ export class DungeonGenerator {
     for (const [x, y] of PILLARS) {
       layer.putTileAt(WALL.BLOCK, x, y);
     }
+  }
+
+  /** Draws subtle tech-grid lines on the floor area between walls. */
+  private static createFloorGrid(scene: Phaser.Scene): void {
+    const gfx = scene.add.graphics();
+    gfx.lineStyle(1, 0x334466, 0.1);
+
+    const startX = WTS;
+    const endX = (ROOM_WIDTH - 1) * WTS;
+    const startY = WTS;
+    const endY = (ROOM_HEIGHT - 1) * WTS;
+
+    for (let x = startX; x <= endX; x += WTS) {
+      gfx.lineBetween(x, startY, x, endY);
+    }
+    for (let y = startY; y <= endY; y += WTS) {
+      gfx.lineBetween(startX, y, endX, y);
+    }
+
+    gfx.setDepth(0.5);
   }
 }

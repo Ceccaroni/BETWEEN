@@ -89,3 +89,58 @@
 ## 2026-02-22: Inaktive Assets — _unused/ Ordner
 **Entscheid:** Nicht mehr genutzte Assets werden nach `public/assets/_unused/` verschoben statt gelöscht.
 **Warum:** Assets könnten später für andere Biome oder als Referenz nützlich sein. Löschen ist irreversibel, Verschieben nicht.
+
+## 2026-03-21: Player-Wechsel Hero Wizard → Hero Warrior (DungeonAssetPack)
+**Entscheid:** Hero Wizard (352×384, AI-generiert, Scale 0.35) ersetzt durch Hero Warrior (64×64, Pixel-Art, Scale 1:1)
+**Warum:** Der High-Res Hero Wizard passte stilistisch nicht zum 32×32 Pupkin Pixel-Art Tileset — zwei verschiedene visuelle Welten. Der DungeonAssetPack Hero Warrior ist native 64×64, was exakt der Display-Größe der Tiles (32×32 × 2× Scale) entspricht. Kein Skalierungs-Hack mehr nötig.
+**Hero Wizard bleibt** als Backup in BootScene.ts auskommentiert + Sprites in public/assets/characters/hero-wizard/.
+
+## 2026-03-21: Twin-Stick Shooting mit Maus-Aiming
+**Entscheid:** Bewegung WASD, Zielen mit Maus, Schiessen mit Linksklick. Player flippt horizontal zur Maus.
+**Warum:** Nuclear Throne / Gungeon Stil. Maus-Aiming ist präziser als "letzte Bewegungsrichtung" (Binding of Isaac). Twin-Stick ist der Standard für Top-Down Shooter-Roguelikes.
+**Alternativen verworfen:** Richtungs-basiertes Schiessen (ungenau), Auto-Aim (langweilig)
+
+## 2026-03-21: Pupkin Projectiles für Spieler-Bolzen
+**Entscheid:** Pupkin `projectiles.png` Frames 0-2 (grüne Energie-Dashes) als Spieler-Projektile, Frames 5-7 (cyan) für Gegner-Projektile.
+**Warum:** Bereits geladen in BootScene, 32×32 bei 2× Scale = 64px Display, farblich unterscheidbar (grün = Spieler, cyan = Gegner). DungeonAssetPack Arrow (32×32 Einzelbild) als Alternative nicht animiert.
+
+## 2026-03-21: Projektil Object Pool (20 Sprites)
+**Entscheid:** Pool von 20 vorinstanziierten Projektilen, recycled via activate/deactivate.
+**Warum:** Performance — kein `new Sprite()` bei jedem Schuss. Bei 4 Schüssen/Sek und 2s Lebenszeit sind max 8 gleichzeitig aktiv, 20 gibt grosszügigen Buffer.
+
+## 2026-03-21: Custom Crosshair (programmatisch)
+**Entscheid:** Crosshair wird per Phaser Graphics gezeichnet (weisses Kreuz mit Center-Gap), kein Sprite-Asset.
+**Warum:** Sofort verfügbar, keine Asset-Abhängigkeit, gut sichtbar auf dunklem Dungeon-Boden. Pupkin UI-Sheet hätte passende Icons aber Identifikation der richtigen Frames unsicher.
+
+## 2026-03-21: DungeonAssetPack Enemies für Combat (64×64)
+**Entscheid:** Green Mucus als "Drone" (Chaser), Witch als "Turret" (Stationary Shooter). Beide 64×64, 8 Frames.
+**Warum:** Gleiche Pixel-Art-Qualität wie Hero Warrior, passende Grösse (1:1 mit Player). Pupkin Enemies (32×32) wären bei 2× Scale visuell ok, aber DungeonAssetPack hat mehr Charakter-Vielfalt und bessere Lesbarkeit.
+
+## 2026-03-21: DungeonAssetPack als primäre Charakter/Prop-Quelle
+**Entscheid:** Characters, Enemies und Props kommen primär aus dem DungeonAssetPack, Tileset bleibt Pupkin.
+**Warum:** DungeonAssetPack hat 24 Enemy-Typen (64×64), animierte Props (Bonfire, Candles, Chest, Doors, Traps), VFX (Slash, Hurt, Explosion), GUI-Elemente. Alles im gleichen Pixel-Art-Stil. Kombiniert mit Pupkin-Tileset für die Welt ergibt das ein kohärentes Gesamtbild.
+
+## 2026-03-21: PropManager als eigenes System
+**Entscheid:** Prop-Platzierung und Animationen in eigene Klasse `src/systems/PropManager.ts` extrahiert.
+**Warum:** GameScene.ts drohte das 200-Zeilen-Limit zu überschreiten. Data-driven Ansatz (Arrays mit Prop-Definitionen) statt hartcodierter Platzierung. Ermöglicht später einfaches Hinzufügen neuer Props oder Room-Templates.
+
+## 2026-03-21: URL-safe Asset-Kopien
+**Entscheid:** Assets mit `#` oder Spaces im Dateinamen werden als URL-safe Kopien angelegt.
+**Warum:** `#` in URLs wird als Fragment-Identifier interpretiert, Browser lädt falsche Datei. `candle#2-32x32-Sheet.png` → `candle2-32x32-Sheet.png`, `wooden barrel.png` → `wooden-barrel.png`. Originale bleiben erhalten, Code referenziert nur die Kopien.
+
+## 2026-03-21: Dash-Mechanik — Richtungs-basiert mit Fallback
+**Entscheid:** Dash geht in WASD-Richtung. Ohne Input: Dash in Blickrichtung (flipX).
+**Warum:** Spieler will instinktiv "weg vom Gegner" dashes — Bewegungsrichtung ist intuitiver als Mausrichtung. Fallback auf Blickrichtung verhindert "Dash auf der Stelle" wenn man still steht.
+**Alternativen verworfen:** Mausrichtungs-Dash (zu unintuitiv), Doppeltipp-Richtung (zu langsam)
+
+## 2026-03-21: I-Frames — einheitliches System für Dash und Hit
+**Entscheid:** `startIFrames()` wird sowohl vom Dash als auch von Kontaktschaden aufgerufen. Gleiche Dauer (500ms), gleicher Blink-Effekt.
+**Warum:** Einheitliches System statt separate Invulnerability-Tracker. Dash gewährt automatisch I-Frames (wie in Nuclear Throne / Enter the Gungeon). Späterer Hit-iFrame nutzt den gleichen Code.
+
+## 2026-03-21: Floor-Grid statt Noise-Pattern
+**Entscheid:** Subtile Tech-Grid-Linien (1px, 0x334466, alpha 0.1) statt geplantes Noise-Pattern.
+**Warum:** Grid-Linien passen besser zur "Machine"-Ästhetik. Programmatisch einfach (Phaser Graphics), kein zusätzliches Asset nötig. Depth 0.5 (über Floor-Rechteck, unter Walls).
+
+## 2026-03-21: Atmosphäre-Effekte
+**Entscheid:** Ambient-Partikel (schwebende Motes) + Vignette-Overlay in GameScene.
+**Warum:** Juice Policy verlangt Maximum bei visuellen Features. Motes erzeugen lebendige Atmosphäre, Vignette fokussiert den Blick auf die Raum-Mitte. Beide sind performance-günstig (wenige Partikel, statische Graphics).

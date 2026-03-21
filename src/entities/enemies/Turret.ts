@@ -119,7 +119,9 @@ export class Turret extends Enemy {
       alpha: 0,
       scale: 1.5,
       duration: 80,
-      onComplete: () => flash.destroy(),
+      onComplete: () => {
+        if (flash && flash.scene) flash.destroy();
+      },
     });
 
     // Emit event for CombatManager to spawn the projectile

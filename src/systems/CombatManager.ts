@@ -33,6 +33,7 @@ export class CombatManager {
   private enemies: Phaser.Physics.Arcade.Group;
   private wallLayer: Phaser.Tilemaps.TilemapLayer;
   private playerHP: number;
+  private playerDead = false;
   private colliders: Phaser.Physics.Arcade.Collider[] = [];
 
   constructor(
@@ -57,14 +58,22 @@ export class CombatManager {
 
   /** Sets up all collision/overlap handlers. */
   private wireCollisions(): void {
-    // Player projectiles hit enemies
+    // Player projectiles hit enemies (argument swap protection)
     this.colliders.push(
       this.scene.physics.add.overlap(
         this.projectilePool.getGroup(),
         this.enemies,
-        (projObj, enemyObj) => {
-          const proj = projObj as Projectile;
-          const enemy = enemyObj as Enemy;
+        (objA, objB) => {
+          // Identify which is projectile and which is enemy
+          let proj: Projectile;
+          let enemy: Enemy;
+          if ((objA as Projectile).deactivate) {
+            proj = objA as Projectile;
+            enemy = objB as Enemy;
+          } else {
+            proj = objB as Projectile;
+            enemy = objA as Enemy;
+          }
           if (!proj.active || !enemy.active) return;
 
           enemy.takeDamage(PROJECTILE_DAMAGE, proj.x, proj.y);
@@ -84,13 +93,13 @@ export class CombatManager {
       this.scene.physics.add.collider(this.enemies, this.enemies)
     );
 
-    // Player ↔ enemies contact damage
+    // Player ↔ enemies contact damage (argument swap protection)
     this.colliders.push(
       this.scene.physics.add.overlap(
         this.player,
         this.enemies,
-        (_playerObj, enemyObj) => {
-          const enemy = enemyObj as Enemy;
+        (objA, objB) => {
+          const enemy = (objA === this.player ? objB : objA) as Enemy;
           if (!enemy.active) return;
           this.damagePlayer(enemy.getContactDamage(), enemy.x, enemy.y);
         }
@@ -134,6 +143,7 @@ export class CombatManager {
 
   /** Damages the player if not invulnerable. Applies knockback and VFX. */
   private damagePlayer(amount: number, fromX: number, fromY: number): void {
+    if (this.playerDead) return;
     if (this.player.getIsInvulnerable()) return;
 
     this.playerHP -= amount;
@@ -142,7 +152,7 @@ export class CombatManager {
     // Red flash
     this.player.setTintFill(0xff2244);
     window.setTimeout(() => {
-      if (this.player.active) this.player.clearTint();
+      if (this.player && this.player.active) this.player.clearTint();
     }, 100);
 
     // Screen shake
@@ -161,7 +171,12 @@ export class CombatManager {
 
     if (this.playerHP <= 0) {
       this.playerHP = 0;
+      this.playerDead = true;
       this.scene.events.emit('player-hp-changed', 0);
+
+      // Reset timeScale before death fade (in case enemy hitstop is active)
+      this.scene.time.timeScale = 1;
+
       this.scene.cameras.main.fade(800, 0, 0, 0, false, (_cam: Phaser.Cameras.Scene2D.Camera, progress: number) => {
         if (progress >= 1) {
           this.scene.scene.start('GameOverScene');
@@ -222,12 +237,14 @@ export class CombatManager {
 
   /** Must be called every frame from scene update. */
   update(delta: number): void {
-    this.enemies.getChildren().forEach((child) => {
+    // Snapshot array to avoid issues if enemies are destroyed during iteration
+    const children = [...this.enemies.getChildren()];
+    for (const child of children) {
       const enemy = child as Enemy;
       if (enemy.active) {
         enemy.updateEnemy(this.player, delta);
       }
-    });
+    }
 
     this.enemyProjectilePool.update();
   }
@@ -289,7 +306,9 @@ export class CombatManager {
         alpha: 0,
         scale: 0,
         duration: Phaser.Math.Between(100, 200),
-        onComplete: () => spark.destroy(),
+        onComplete: () => {
+          if (spark && spark.scene) spark.destroy();
+        },
       });
     }
   }

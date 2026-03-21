@@ -104,7 +104,9 @@ export class Door extends Phaser.Physics.Arcade.Sprite {
     this.play('door-open');
     this.once('animationcomplete', () => {
       this.isOpen = true;
-      this.scene.events.emit('door-entered', this.wallSide);
+      if (this.scene && this.scene.events) {
+        this.scene.events.emit('door-entered', this.wallSide);
+      }
     });
   }
 

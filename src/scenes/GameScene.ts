@@ -199,8 +199,9 @@ export class GameScene extends Phaser.Scene {
         this.player,
         this.exitDoor,
         (objA, objB) => {
+          if (this.isTransitioning) return;
           const door = (objA === this.player ? objB : objA) as Door;
-          door.playerEntered();
+          if (door && door.active) door.playerEntered();
         }
       )
     );
@@ -349,7 +350,9 @@ export class GameScene extends Phaser.Scene {
       duration: 300,
       yoyo: true,
       hold: 1000,
-      onComplete: () => text.destroy(),
+      onComplete: () => {
+        if (text && text.scene) text.destroy();
+      },
     });
   }
 
@@ -364,7 +367,9 @@ export class GameScene extends Phaser.Scene {
       alpha: 0,
       scale: 1.5,
       duration: 80,
-      onComplete: () => flash.destroy(),
+      onComplete: () => {
+        if (flash && flash.scene) flash.destroy();
+      },
     });
   }
 
@@ -382,7 +387,9 @@ export class GameScene extends Phaser.Scene {
         alpha: 0,
         scale: 0,
         duration: Phaser.Math.Between(100, 200),
-        onComplete: () => spark.destroy(),
+        onComplete: () => {
+          if (spark && spark.scene) spark.destroy();
+        },
       });
     }
   }

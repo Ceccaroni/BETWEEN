@@ -88,7 +88,9 @@ export class RoomClearManager {
       y: cy - 20,
       delay: 2000,
       duration: 600,
-      onComplete: () => text.destroy(),
+      onComplete: () => {
+        if (text && text.scene) text.destroy();
+      },
     });
 
     // Reveal exit door after slow-mo ends

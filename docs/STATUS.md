@@ -52,7 +52,7 @@
 - **[NEU] In-Scene Room Cycling** — Persistente Objekte überleben Transitionen
 
 ## Aktives Ticket
-T-006: Raum-Transitionen — **ABGESCHLOSSEN** (2026-03-21)
+Keins — Freeze-Bugfixes abgeschlossen (2026-03-21)
 
 ## T-006 Fortschritt
 - [x] **Phase 0**: Asset-Vorbereitung + Konstanten
@@ -91,6 +91,11 @@ T-006: Raum-Transitionen — **ABGESCHLOSSEN** (2026-03-21)
 ## Bekannte Bugs (behoben)
 - **[FIXED] Freeze bei Treffer durch Enemy-Projektil** — Phaser overlap callback argument swap
 - **[FIXED] timeScale-Freeze bei Enemy-Tod** — window.setTimeout statt delayedCall
+- **[FIXED] Freeze: Player-Tod Re-Hit** — playerDead-Flag verhindert doppelten scene.start()
+- **[FIXED] Freeze: timeScale auf zerstörter Scene** — scene.sys.isActive() Check vor Restore
+- **[FIXED] Freeze: Destroyed-Object Callbacks** — 12 Stellen mit scene-Existenz-Check abgesichert
+- **[FIXED] Freeze: Argument-Swap in Overlaps** — Alle Overlap-Callbacks swap-sicher
+- **[FIXED] Freeze: Enemy-Iteration** — Snapshot-Array statt Live-Iteration
 
 ## Bekannte Bugs (offen)
 - **Floor ist Dark Rectangle + Grid** — Pupkin Floor-Tiles transparent by design

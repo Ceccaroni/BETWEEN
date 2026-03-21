@@ -73,7 +73,9 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.updateAI(player, delta);
     }
 
-    this.shadow.setPosition(this.x, this.y + 26);
+    if (this.shadow && this.shadow.active) {
+      this.shadow.setPosition(this.x, this.y + 26);
+    }
   }
 
   /** Deals damage to this enemy, applies knockback and VFX. Returns true if killed. */
@@ -132,7 +134,9 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     vfx.play('vfx-hurt-play');
-    vfx.once('animationcomplete', () => vfx.destroy());
+    vfx.once('animationcomplete', () => {
+      if (vfx && vfx.scene) vfx.destroy();
+    });
   }
 
   /** Death sequence: freeze-frame, dissolve, particles. */
@@ -142,7 +146,9 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
     // Hitstop: brief real-time pause via window.setTimeout (immune to timeScale)
     scene.time.timeScale = 0.05;
     window.setTimeout(() => {
-      scene.time.timeScale = 1;
+      if (scene && scene.sys && scene.sys.isActive()) {
+        scene.time.timeScale = 1;
+      }
     }, FREEZE_MS);
 
     // Death particles
@@ -156,7 +162,7 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
       alpha: 0,
       duration: 200,
       onComplete: () => {
-        this.destroy();
+        if (this && this.scene) this.destroy();
       },
     });
 
@@ -169,23 +175,26 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   /** Burst of colored particles on death. */
   private spawnDeathParticles(): void {
+    const scene = this.scene;
     const colors = [0x44ff88, 0x88ffaa, 0x22cc66];
     for (let i = 0; i < 12; i++) {
       const color = colors[i % colors.length];
-      const particle = this.scene.add.circle(
+      const particle = scene.add.circle(
         this.x, this.y,
         Phaser.Math.Between(2, 5),
         color, 1
       );
       particle.setDepth(20);
-      this.scene.tweens.add({
+      scene.tweens.add({
         targets: particle,
         x: this.x + Phaser.Math.Between(-30, 30),
         y: this.y + Phaser.Math.Between(-30, 30),
         alpha: 0,
         scale: 0,
         duration: Phaser.Math.Between(200, 400),
-        onComplete: () => particle.destroy(),
+        onComplete: () => {
+          if (particle && particle.scene) particle.destroy();
+        },
       });
     }
   }

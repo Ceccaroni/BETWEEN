@@ -1,7 +1,7 @@
 # STATUS – Between
 
 ## Letzter stabiler Tag
-`v0.5-melee` — 2026-06-24
+`v0.6-boons` — 2026-06-24
 
 ## Was funktioniert
 - Boot → Splash → Title → Menu Flow mit Artwork
@@ -53,10 +53,13 @@
 - **[MELEE] Schwert-Nahkampf** — Linksklick = Schwung-Kegel in Mausrichtung (360°), Lunge, Hitstop, Screenshake, Slash-VFX
 - **[MELEE] Projektil-Deflect** — Schwung zerschneidet Feind-Bolzen im Kegel (cyan Funken)
 - **[MELEE] Schiessen geparkt** — ProjectilePool bleibt verdrahtet, feuert nicht (kommt später als Secondary zurück)
+- **[BOON] Build-System** — 3-Karten-Wahl nach jedem Raum-Clear (Räume 1–5), 9 stapelbare Boons, pausiert das Spiel
+- **[BOON] CombatStats** — zentrale Kampfwerte, Boons mutieren live; persistent über RunState, Schwert liest live
 
 ## Aktives Ticket
-Combat-Neuausrichtung → **Melee-Brawler** (Hades-Style). Phase A abgeschlossen (2026-06-24).
-Nächster Schritt: Phase B — Waffen-Aspekte & Boons nach Raum-Clear (Build-Vielfalt).
+Combat-Neuausrichtung → **Melee-Brawler** (Hades-Style).
+Phase A (Schwert + Deflect) ✓ · Phase B (Boon-System) ✓ — beide 2026-06-24.
+Nächster Schritt: Phase C — echte Gegner-Varianten + Boss (damit Boons gefordert werden); Ranged-Fairness.
 
 ## T-006 Fortschritt
 - [x] **Phase 0**: Asset-Vorbereitung + Konstanten
@@ -99,6 +102,17 @@ Nächster Schritt: Phase B — Waffen-Aspekte & Boons nach Raum-Clear (Build-Vie
 - `src/scenes/GameScene.ts` — Schiessen → Schwert ersetzt, Bewegung/Anim während Schwung gegatet, Deflect verdrahtet
 - `src/scenes/BootScene.ts` — Route `?scene=melee`
 - `src/main.ts` — MeleeTestScene registriert
+
+## Neue/Geänderte Dateien (Session 2026-06-24, Phase B Boons)
+- `src/systems/CombatStats.ts` (NEU) — mutierbare Kampfwerte, aus Konstanten geseedet
+- `src/systems/Boon.ts` (NEU) — Boon-Interface + 9er-Pool + rollBoons()
+- `src/scenes/BoonSelectScene.ts` (NEU) — 3-Karten-Overlay, Wahl per 1/2/3 · ←→ · Enter · Klick
+- `src/systems/MeleeWeapon.ts` — liest CombatStats; Whirlwind, Krit, Lifesteal-Emit
+- `src/systems/RunState.ts` — trägt `stats` + `boons` über die Räume
+- `src/systems/CombatManager.ts` — `healPlayer()` + `player-heal`-Listener (Lifesteal)
+- `src/scenes/GameScene.ts` — Schwert nutzt Run-Stats, `room-cleared` → Boon-Wahl (nicht nach Boss)
+- `src/scenes/MeleeTestScene.ts` — Boon-Test (Taste B) + Live-Stats-Readout
+- `src/main.ts` — BoonSelectScene registriert
 
 ## Bekannte Bugs (behoben)
 - **[FIXED] Freeze bei Treffer durch Enemy-Projektil** — Phaser overlap callback argument swap

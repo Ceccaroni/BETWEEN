@@ -208,3 +208,11 @@
 **Warum:** Macht aus dem „sie schiessen, ich hab nur ein Schwert"-Problem ein Feature (Sekiro/Metal-Gear-Rising-Deflect). Belohnt Timing und aggressives Reingehen, behält Ranged-Gegner als legitimen Spannungsfaktor für ein Melee-Spiel.
 **Umsetzung:** `MeleeWeapon.update()` nimmt optional `Deflectable[]` (Feind-Bolzen), gleiche Kegel-Prüfung wie Enemy-Hits, deaktiviert getroffene Bolzen + cyan Funken-VFX.
 **Offen:** Deflect-Fenster (~150 ms) ggf. zu eng — Tuning nach Spieler-Feedback (grösseres Fenster oder Turret feuert seltener / stoppt bei Nähe).
+
+## 2026-06-24: Boon-System — Build-Vielfalt als Roguelike-Kern (Phase B)
+**Entscheid:** Nach jedem Raum-Clear (Räume 1–5, nicht nach dem Boss) wählt der Spieler 1 von 3 zufälligen Boons. Boons mutieren eine zentrale, run-persistente `CombatStats`-Instanz, die das Schwert live liest.
+**Warum:** Das war der fehlende Roguelike-Kern — vorher unterschieden sich zwei Runs auf keiner Achse. Build-Entscheidungen + Synergien durchs Stapeln sind, was erfahrene Spieler hält. Datengetriebener Boon-Pool ist trivial erweiterbar.
+**Umsetzung:** `CombatStats` (Werte aus Konstanten geseedet) statt fester Konstanten im `MeleeWeapon`. `Boon`-Interface mit `apply(stats)`. `BoonSelectScene` als Overlay (pausiert GameScene via `scene.pause()` + `launch()`). `RunState` hält `stats` + `boons`. Lifesteal/Heal über `player-heal`-Event → `CombatManager.healPlayer()`.
+**Synergien:** Bewusst kein Sonder-Code — sie entstehen aus dem Stapeln (z.B. Swift + Vampire + Wide = Sustain; Sharper + Executioner + Reach = Bruiser).
+**Alternativen verworfen:** Feste Upgrade-Pfade (weniger Wiederspielwert), Boons als eigene Scene-Pause via `scene.switch` (umständlicher als pause+launch-Overlay).
+**Offen:** Boon-Werte erster Wurf — Balancing mit echten Gegnern (Phase C). MaxHP-Boons bewusst weggelassen (HUD ist auf 5 Herzen fix).

@@ -54,6 +54,14 @@ export class CombatManager {
 
     this.wireCollisions();
     this.listenForTurretFire();
+    this.scene.events.on('player-heal', this.healPlayer, this);
+  }
+
+  /** Heals the player up to max HP (driven by lifesteal/boons via 'player-heal'). */
+  healPlayer(amount: number): void {
+    if (this.playerDead || amount <= 0 || this.playerHP >= PLAYER_HP) return;
+    this.playerHP = Math.min(PLAYER_HP, this.playerHP + amount);
+    this.scene.events.emit('player-hp-changed', this.playerHP);
   }
 
   /** Sets up all collision/overlap handlers. */
@@ -271,8 +279,9 @@ export class CombatManager {
 
   /** Destroys all enemies, clears projectiles, removes colliders and event listeners. */
   cleanup(): void {
-    // Remove turret-fire listener
+    // Remove turret-fire + heal listeners
     this.scene.events.off('turret-fire');
+    this.scene.events.off('player-heal', this.healPlayer, this);
 
     // Destroy all enemies (calls overridden destroy which cleans up shadows)
     const children = [...this.enemies.getChildren()];

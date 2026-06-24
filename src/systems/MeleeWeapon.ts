@@ -1,12 +1,6 @@
 import Phaser from 'phaser';
-import {
-  ATTACK_DAMAGE,
-  ATTACK_RANGE,
-  ATTACK_ARC_DEG,
-  ATTACK_DURATION_MS,
-  ATTACK_COOLDOWN_MS,
-  ATTACK_LUNGE_SPEED,
-} from '../utils/Constants';
+import { ATTACK_DURATION_MS } from '../utils/Constants';
+import { CombatStats } from './CombatStats';
 import type { Enemy } from '../entities/Enemy';
 
 /** Anything the swing can knock out of the air (e.g. enemy projectiles). */
@@ -19,24 +13,31 @@ export interface Deflectable {
 
 /**
  * Melee sword weapon: a cone-shaped swing toward an aim angle.
- * The swing angle locks at start, each enemy is damaged at most once per swing,
- * and the swing draws a sweeping slash arc, lunges the owner forward, and
- * shakes the camera when a hit lands. Owned by a scene, points at one sprite.
+ * The swing angle and arc lock at start, each enemy/projectile is resolved at
+ * most once per swing, and the swing draws a sweeping slash, lunges the owner,
+ * and shakes the camera. All tunables come from a shared {@link CombatStats}
+ * instance, so run boons (damage, cooldown, reach, crit, whirlwind…) take
+ * effect immediately.
  */
 export class MeleeWeapon {
   private readonly scene: Phaser.Scene;
   private readonly owner: Phaser.Physics.Arcade.Sprite;
+  private readonly stats: CombatStats;
   private readonly gfx: Phaser.GameObjects.Graphics;
 
   private swinging = false;
   private swingTimer = 0;
   private cooldownTimer = 0;
   private swingAngle = 0;
+  private swingArcDeg = 0;
+  private swingCount = 0;
+  private lifestealAccum = 0;
   private readonly hitThisSwing = new Set<Enemy>();
 
-  constructor(scene: Phaser.Scene, owner: Phaser.Physics.Arcade.Sprite) {
+  constructor(scene: Phaser.Scene, owner: Phaser.Physics.Arcade.Sprite, stats: CombatStats) {
     this.scene = scene;
     this.owner = owner;
+    this.stats = stats;
     this.gfx = scene.add.graphics();
     this.gfx.setDepth(15);
   }
@@ -59,17 +60,21 @@ export class MeleeWeapon {
   tryAttack(angleRad: number): boolean {
     if (!this.canAttack()) return false;
 
+    this.swingCount++;
+    const whirl = this.stats.whirlwindEvery > 0 && this.swingCount % this.stats.whirlwindEvery === 0;
+
     this.swinging = true;
     this.swingTimer = ATTACK_DURATION_MS;
-    this.cooldownTimer = ATTACK_COOLDOWN_MS;
+    this.cooldownTimer = this.stats.cooldownMs;
     this.swingAngle = angleRad;
+    this.swingArcDeg = whirl ? 360 : this.stats.arcDeg;
     this.hitThisSwing.clear();
 
     // Forward lunge — commit weight to the swing (Hades-style).
     const body = this.owner.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(
-      Math.cos(angleRad) * ATTACK_LUNGE_SPEED,
-      Math.sin(angleRad) * ATTACK_LUNGE_SPEED
+      Math.cos(angleRad) * this.stats.lungeSpeed,
+      Math.sin(angleRad) * this.stats.lungeSpeed
     );
 
     this.owner.play('player-attack', true);
@@ -98,43 +103,55 @@ export class MeleeWeapon {
     }
   }
 
-  /** Damages each in-cone enemy once per swing; shakes camera on any hit. */
+  /** True if a point lies inside the active swing cone. */
+  private inCone(x: number, y: number): boolean {
+    const dist = Phaser.Math.Distance.Between(this.owner.x, this.owner.y, x, y);
+    if (dist > this.stats.rangePx) return false;
+    const halfArc = Phaser.Math.DegToRad(this.swingArcDeg / 2);
+    const toPoint = Phaser.Math.Angle.Between(this.owner.x, this.owner.y, x, y);
+    return Math.abs(Phaser.Math.Angle.Wrap(toPoint - this.swingAngle)) <= halfArc;
+  }
+
+  /** Damages each in-cone enemy once per swing; rolls crit, lifesteal, shake. */
   private resolveHits(enemies: Enemy[]): void {
-    const halfArc = Phaser.Math.DegToRad(ATTACK_ARC_DEG / 2);
     let landed = false;
 
     for (const enemy of enemies) {
       if (!enemy.active || this.hitThisSwing.has(enemy)) continue;
-
-      const dist = Phaser.Math.Distance.Between(this.owner.x, this.owner.y, enemy.x, enemy.y);
-      if (dist > ATTACK_RANGE) continue;
-
-      const toEnemy = Phaser.Math.Angle.Between(this.owner.x, this.owner.y, enemy.x, enemy.y);
-      if (Math.abs(Phaser.Math.Angle.Wrap(toEnemy - this.swingAngle)) > halfArc) continue;
+      if (!this.inCone(enemy.x, enemy.y)) continue;
 
       this.hitThisSwing.add(enemy);
-      enemy.takeDamage(ATTACK_DAMAGE, this.owner.x, this.owner.y);
+
+      let dmg = this.stats.damage;
+      if (this.stats.critChance > 0 && Phaser.Math.FloatBetween(0, 1) < this.stats.critChance) {
+        dmg *= 2;
+      }
+      enemy.takeDamage(dmg, this.owner.x, this.owner.y);
+      this.applyLifesteal();
       landed = true;
     }
 
     if (landed) this.scene.cameras.main.shake(70, 0.006);
   }
 
+  /** Accumulates fractional lifesteal and emits whole-HP heal events. */
+  private applyLifesteal(): void {
+    if (this.stats.lifesteal <= 0) return;
+    this.lifestealAccum += this.stats.lifesteal;
+    if (this.lifestealAccum >= 1) {
+      const heal = Math.floor(this.lifestealAccum);
+      this.lifestealAccum -= heal;
+      this.scene.events.emit('player-heal', heal);
+    }
+  }
+
   /** Slices any in-cone projectile out of the air, once each. */
   private resolveDeflects(deflectables: Deflectable[]): void {
     if (deflectables.length === 0) return;
-    const halfArc = Phaser.Math.DegToRad(ATTACK_ARC_DEG / 2);
     let deflected = false;
 
     for (const d of deflectables) {
-      if (!d.active) continue;
-
-      const dist = Phaser.Math.Distance.Between(this.owner.x, this.owner.y, d.x, d.y);
-      if (dist > ATTACK_RANGE) continue;
-
-      const toD = Phaser.Math.Angle.Between(this.owner.x, this.owner.y, d.x, d.y);
-      if (Math.abs(Phaser.Math.Angle.Wrap(toD - this.swingAngle)) > halfArc) continue;
-
+      if (!d.active || !this.inCone(d.x, d.y)) continue;
       this.spawnDeflectSpark(d.x, d.y);
       d.deactivate();
       deflected = true;
@@ -169,7 +186,8 @@ export class MeleeWeapon {
 
   /** Draws the faint cone plus a bright blade edge sweeping across it. */
   private drawArc(progress: number): void {
-    const halfArc = Phaser.Math.DegToRad(ATTACK_ARC_DEG / 2);
+    const halfArc = Phaser.Math.DegToRad(this.swingArcDeg / 2);
+    const range = this.stats.rangePx;
     const { x, y } = this.owner;
     const fade = 1 - progress;
 
@@ -177,7 +195,7 @@ export class MeleeWeapon {
 
     // Faint filled cone showing the threatened wedge.
     this.gfx.fillStyle(0xffffff, 0.12 * fade);
-    this.gfx.slice(x, y, ATTACK_RANGE, this.swingAngle - halfArc, this.swingAngle + halfArc, false);
+    this.gfx.slice(x, y, range, this.swingAngle - halfArc, this.swingAngle + halfArc, false);
     this.gfx.fillPath();
 
     // Bright leading edge sweeps from one side of the cone to the other.
@@ -185,7 +203,7 @@ export class MeleeWeapon {
     this.gfx.lineStyle(4, 0xeaf6ff, 0.9 * fade);
     this.gfx.beginPath();
     this.gfx.moveTo(x, y);
-    this.gfx.lineTo(x + Math.cos(edge) * ATTACK_RANGE, y + Math.sin(edge) * ATTACK_RANGE);
+    this.gfx.lineTo(x + Math.cos(edge) * range, y + Math.sin(edge) * range);
     this.gfx.strokePath();
   }
 

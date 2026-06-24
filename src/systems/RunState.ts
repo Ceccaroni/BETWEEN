@@ -1,4 +1,6 @@
 import { PLAYER_HP, ROOMS_PER_RUN } from '../utils/Constants';
+import { CombatStats } from './CombatStats';
+import type { Boon } from './Boon';
 
 /** Direction a wall faces (for door/entry placement). */
 export type WallSide = 'top' | 'bottom' | 'left' | 'right';
@@ -30,6 +32,12 @@ export class RunState {
 
   /** Total rooms in this run. */
   readonly totalRooms = ROOMS_PER_RUN;
+
+  /** Combat stats for this run; boons mutate it in place, shared with the weapon. */
+  readonly stats = new CombatStats();
+
+  /** Boons acquired so far this run. */
+  readonly boons: Boon[] = [];
 
   /** Returns true if current room is the boss room. */
   isBossRoom(): boolean {

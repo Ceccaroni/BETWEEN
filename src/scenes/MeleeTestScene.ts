@@ -3,6 +3,8 @@ import { Player } from '../entities/Player';
 import { Drone } from '../entities/enemies/Drone';
 import { InputSystem } from '../systems/InputSystem';
 import { MeleeWeapon } from '../systems/MeleeWeapon';
+import { CombatStats } from '../systems/CombatStats';
+import { rollBoons, Boon } from '../systems/Boon';
 import type { Enemy } from '../entities/Enemy';
 
 /** Play-area size for the melee sandbox, in world pixels. */
@@ -21,6 +23,8 @@ export class MeleeTestScene extends Phaser.Scene {
   private player!: Player;
   private controls!: InputSystem;
   private weapon!: MeleeWeapon;
+  private stats!: CombatStats;
+  private statsText!: Phaser.GameObjects.Text;
   private enemies!: Phaser.Physics.Arcade.Group;
   private spawnTimer = 0;
 
@@ -36,8 +40,12 @@ export class MeleeTestScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true);
 
     this.controls = new InputSystem(this);
-    this.weapon = new MeleeWeapon(this, this.player);
+    this.stats = new CombatStats();
+    this.weapon = new MeleeWeapon(this, this.player, this.stats);
     this.enemies = this.physics.add.group();
+
+    // Test hook: B opens a boon selection that mutates the live stats.
+    this.input.keyboard!.on('keydown-B', () => this.openBoons());
 
     // Light contact knockback so enemies feel threatening (no death in sandbox).
     this.physics.add.overlap(this.player, this.enemies, this.onContact, undefined, this);
@@ -155,7 +163,7 @@ export class MeleeTestScene extends Phaser.Scene {
   /** Fixed control hints + sandbox label, pinned to the camera despite zoom. */
   private drawHud(): void {
     const hint =
-      'WASD  bewegen      •      MAUS  zielen      •      LINKSKLICK  Schwert      •      LEERTASTE  Dash';
+      'WASD bewegen   •   MAUS zielen   •   LINKSKLICK Schwert   •   LEERTASTE Dash   •   B Boon (Test)';
     const hintText = this.add
       .text(0, 0, hint, {
         fontFamily: 'monospace',
@@ -169,7 +177,7 @@ export class MeleeTestScene extends Phaser.Scene {
     this.pinToCamera(hintText, this.cameras.main.width / 2, this.cameras.main.height - 28);
 
     const label = this.add
-      .text(0, 0, 'SANDBOX · Melee-Prototyp (Phase A)', {
+      .text(0, 0, 'SANDBOX · Melee + Boons (Phase B)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#6b7689',
@@ -177,6 +185,46 @@ export class MeleeTestScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(100);
     this.pinToCamera(label, 16, 14);
+
+    this.statsText = this.add
+      .text(0, 0, '', {
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        color: '#9fb0cc',
+        lineSpacing: 4,
+      })
+      .setOrigin(0, 0)
+      .setDepth(100);
+    this.pinToCamera(this.statsText, 16, 40);
+    this.refreshStatsText();
+  }
+
+  /** Live readout of the current combat stats (verifies boons apply). */
+  private refreshStatsText(): void {
+    const s = this.stats;
+    this.statsText.setText([
+      `dmg        ${s.damage}`,
+      `cooldown   ${s.cooldownMs} ms`,
+      `range      ${s.rangePx}`,
+      `arc        ${s.arcDeg}°`,
+      `lunge      ${s.lungeSpeed}`,
+      `lifesteal  ${s.lifesteal}`,
+      `crit       ${Math.round(s.critChance * 100)}%`,
+      `whirlwind  ${s.whirlwindEvery === 0 ? '—' : `jeder ${s.whirlwindEvery}.`}`,
+    ].join('\n'));
+  }
+
+  /** Pauses the sandbox and opens a boon selection that mutates the stats. */
+  private openBoons(): void {
+    this.scene.pause();
+    this.scene.launch('BoonSelectScene', {
+      choices: rollBoons(3),
+      onPick: (boon: Boon) => {
+        boon.apply(this.stats);
+        this.scene.resume();
+        this.refreshStatsText();
+      },
+    });
   }
 
   /**

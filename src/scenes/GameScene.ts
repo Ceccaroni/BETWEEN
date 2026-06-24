@@ -9,6 +9,7 @@ import { ProjectilePool } from '../systems/ProjectilePool';
 import { CombatManager } from '../systems/CombatManager';
 import { MeleeWeapon, Deflectable } from '../systems/MeleeWeapon';
 import { Enemy } from '../entities/Enemy';
+import { rollBoons, Boon } from '../systems/Boon';
 import { RoomClearManager } from '../systems/RoomClearManager';
 import { RunState, WallSide, oppositeSide } from '../systems/RunState';
 import { Crosshair } from '../ui/Crosshair';
@@ -67,7 +68,7 @@ export class GameScene extends Phaser.Scene {
     this.inputSystem = new InputSystem(this);
     this.crosshair = new Crosshair(this);
     this.projectilePool = new ProjectilePool(this);
-    this.weapon = new MeleeWeapon(this, this.player);
+    this.weapon = new MeleeWeapon(this, this.player, this.runState.stats);
     this.hud = new HUD(this);
 
     // Build first room
@@ -218,6 +219,9 @@ export class GameScene extends Phaser.Scene {
     // Room clear manager (with door reference)
     this.roomClearManager = new RoomClearManager(this, this.combatManager, this.exitDoor);
 
+    // Offer a boon once this room is cleared (skipped after the boss room).
+    this.events.once('room-cleared', () => this.offerBoon());
+
     // Camera
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
     this.cameras.main.setBounds(0, 0, this.room.widthPx, this.room.heightPx);
@@ -361,6 +365,48 @@ export class GameScene extends Phaser.Scene {
       hold: 1000,
       onComplete: () => {
         if (text && text.scene) text.destroy();
+      },
+    });
+  }
+
+  // ========== BOONS ==========
+
+  /** Opens the boon selection overlay after a room clear (not after the boss). */
+  private offerBoon(): void {
+    if (this.isTransitioning || this.runState.isBossRoom()) return;
+
+    const choices = rollBoons(3);
+    this.scene.pause();
+    this.scene.launch('BoonSelectScene', {
+      choices,
+      onPick: (boon: Boon) => {
+        boon.apply(this.runState.stats);
+        this.runState.boons.push(boon);
+        this.scene.resume();
+        this.showBoonAcquired(boon);
+      },
+    });
+  }
+
+  /** Brief toast confirming the acquired boon. */
+  private showBoonAcquired(boon: Boon): void {
+    const t = this.add.text(this.cameras.main.width / 2, 72, `BOON  ·  ${boon.name}`, {
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      color: '#ffd84a',
+      stroke: '#000000',
+      strokeThickness: 4,
+    });
+    t.setOrigin(0.5).setScrollFactor(0).setDepth(160).setAlpha(0);
+    this.tweens.add({
+      targets: t,
+      alpha: 1,
+      y: 84,
+      duration: 250,
+      yoyo: true,
+      hold: 1300,
+      onComplete: () => {
+        if (t && t.scene) t.destroy();
       },
     });
   }

@@ -49,6 +49,12 @@ export const TURRET_FIRE_INTERVAL_MS = 2000;
 /** Turret telegraph duration before firing in ms */
 export const TURRET_TELEGRAPH_MS = 500;
 
+/** Turret only winds up a shot when the player is within this range (px). */
+export const TURRET_ENGAGE_RANGE = 460;
+
+/** Turret can't fire and aborts its telegraph when the player is this close (px) — rewards closing in. */
+export const TURRET_MELEE_SAFE_RANGE = 110;
+
 /** Total rooms per run (5 combat + 1 boss). */
 export const ROOMS_PER_RUN = 6;
 

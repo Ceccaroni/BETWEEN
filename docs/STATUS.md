@@ -55,11 +55,12 @@
 - **[MELEE] Schiessen geparkt** — ProjectilePool bleibt verdrahtet, feuert nicht (kommt später als Secondary zurück)
 - **[BOON] Build-System** — 3-Karten-Wahl nach jedem Raum-Clear (Räume 1–5), 9 stapelbare Boons, pausiert das Spiel
 - **[BOON] CombatStats** — zentrale Kampfwerte, Boons mutieren live; persistent über RunState, Schwert liest live
+- **[BALANCE] Ranged-Fairness** — Turret feuert nur auf Mitteldistanz (110–460px), schaltet bei Nähe ab (belohnt Reingehen)
 
 ## Aktives Ticket
 Combat-Neuausrichtung → **Melee-Brawler** (Hades-Style).
-Phase A (Schwert + Deflect) ✓ · Phase B (Boon-System) ✓ — beide 2026-06-24.
-Nächster Schritt: Phase C — echte Gegner-Varianten + Boss (damit Boons gefordert werden); Ranged-Fairness.
+Phase A (Schwert + Deflect) ✓ · Phase B (Boon-System) ✓ · Ranged-Fairness ✓ — alle 2026-06-24.
+Nächster Schritt: Phase C — echte Gegner-Varianten + ein richtiger Boss (damit Boons gefordert werden).
 
 ## T-006 Fortschritt
 - [x] **Phase 0**: Asset-Vorbereitung + Konstanten

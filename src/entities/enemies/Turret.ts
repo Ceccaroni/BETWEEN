@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import { Enemy } from '../Enemy';
-import { TURRET_HP, TURRET_FIRE_INTERVAL_MS, TURRET_TELEGRAPH_MS } from '../../utils/Constants';
+import {
+  TURRET_HP,
+  TURRET_FIRE_INTERVAL_MS,
+  TURRET_TELEGRAPH_MS,
+  TURRET_ENGAGE_RANGE,
+  TURRET_MELEE_SAFE_RANGE,
+} from '../../utils/Constants';
 
 /** Contact damage dealt to player on touch. */
 const TURRET_CONTACT_DAMAGE = 1;
@@ -50,7 +56,16 @@ export class Turret extends Enemy {
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
 
+    const dist = Phaser.Math.Distance.Between(this.x, this.y, player.x, player.y);
+
     if (this.isTelegraphing) {
+      // Player closed into melee range mid-windup → the witch is overwhelmed,
+      // aborts the shot. Rewards rushing in.
+      if (dist <= TURRET_MELEE_SAFE_RANGE) {
+        this.cancelTelegraph();
+        return;
+      }
+
       this.telegraphTimer -= delta;
       this.telegraphPulseTime += delta;
       this.updateTelegraphLine();
@@ -59,11 +74,25 @@ export class Turret extends Enemy {
         this.fireBolt();
       }
     } else {
-      this.fireTimer -= delta;
-      if (this.fireTimer <= 0) {
-        this.startTelegraph(player);
+      // Only wind up a shot inside the firing band — never plink from across
+      // the room, never fire point-blank. Outside the band the timer holds.
+      if (dist > TURRET_MELEE_SAFE_RANGE && dist <= TURRET_ENGAGE_RANGE) {
+        this.fireTimer -= delta;
+        if (this.fireTimer <= 0) {
+          this.startTelegraph(player);
+        }
       }
     }
+  }
+
+  /** Aborts an in-progress telegraph (player got too close) and resets the timer. */
+  private cancelTelegraph(): void {
+    this.isTelegraphing = false;
+    if (this.telegraphLine) {
+      this.telegraphLine.destroy();
+      this.telegraphLine = null;
+    }
+    this.fireTimer = TURRET_FIRE_INTERVAL_MS;
   }
 
   /** Begins telegraph phase: locks angle and shows pulsing red line. */

@@ -216,3 +216,9 @@
 **Synergien:** Bewusst kein Sonder-Code — sie entstehen aus dem Stapeln (z.B. Swift + Vampire + Wide = Sustain; Sharper + Executioner + Reach = Bruiser).
 **Alternativen verworfen:** Feste Upgrade-Pfade (weniger Wiederspielwert), Boons als eigene Scene-Pause via `scene.switch` (umständlicher als pause+launch-Overlay).
 **Offen:** Boon-Werte erster Wurf — Balancing mit echten Gegnern (Phase C). MaxHP-Boons bewusst weggelassen (HUD ist auf 5 Herzen fix).
+
+## 2026-06-24: Ranged-Fairness — Turret-Range-Gradient
+**Entscheid:** Die Turret (Witch) feuert nur in einem Mittelband (110–460px). Weiter weg: gar nicht. Näher als 110px: kann nicht feuern und bricht laufende Telegraphs ab.
+**Warum:** Wiederholtes Feedback „die schiessen noch immer" — als Nahkämpfer rennt man quer durch den Raum und wurde von stationären Snipern dauerhaft geplinkt; der Deflect (nur im Schwung-Kegel) konnte das nicht auffangen, solange man woanders kämpfte. Der Gradient macht aus Ranged ein Ziel, das man anrennt und ausschaltet — die Melee-Fantasy funktioniert: reingehen wird belohnt, statt bestraft.
+**Umsetzung:** Distanzprüfung in `Turret.updateAI`; `fireTimer` läuft nur im Band, `cancelTelegraph()` bei Nähe. Konstanten `TURRET_ENGAGE_RANGE` / `TURRET_MELEE_SAFE_RANGE`.
+**Offen:** Optionaler „Cower"-Tell bei Nähe (Readability), Turret-Anzahl pro Raum, Engage-Range/Feuerrate — Tuning nach weiterem Feedback.

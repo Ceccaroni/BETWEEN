@@ -196,3 +196,15 @@
 ## 2026-03-21: Door Asset — door#2 (32×32, 16 Frames)
 **Entscheid:** `door#2_32x32-Sheet.png` als Tür-Sprite, URL-safe kopiert zu `door2-32x32-Sheet.png`.
 **Warum:** 32×32 bei 2× Scale = 64×64 Display, passt exakt in eine Tile-Position. 16-Frame Öffnungs-Animation gibt gutes visuelles Feedback. door#1 (32×64, 2 Tiles hoch) wäre für Side-Walls gut aber inkonsistent mit Top/Bottom-Walls.
+
+## 2026-06-24: Combat-Identität — Melee-Brawler statt Twin-Stick-Shooter
+**Entscheid:** Der Spieler ist ein Nahkämpfer mit Schwert (Hades-Style), kein Schütze. Schiessen wird geparkt (Code bleibt, feuert nicht) und kommt später als Secondary/Special zurück.
+**Warum:** Das Spiel hatte einen Identitätskonflikt — Krieger-Sprite mit fertiger Attack-Animation, der unsichtbar Energie-Bolts aus der Hüfte schoss (`player-attack` war toter Code, nie abgespielt). „Gegner schiessen, wir haben Schwert" war das spürbare Symptom. Eine klare Combat-Identität ist Voraussetzung für alles Weitere (Build-Vielfalt, Gegner-Design). Melee gewählt für intimeres, riskanteres Game-Feel und Power-Fantasy; nutzt vorhandene Attack-Frames + Dash/I-Frames.
+**Umsetzung:** Neues `MeleeWeapon`-System (Kegel-Hitbox in Mausrichtung, Lunge, Hitstop, Slash-VFX). Bewegung/Animation während des Schwungs gegatet (Lunge treibt Velocity). `Player.ts` unangetastet (Hitbox-Werte auf NICHT-ANFASSEN-Liste) — Schwung-Anim wird extern via `play('player-attack')` getriggert.
+**Alternativen verworfen:** Battle-Mage/Caster (Wizard-Hero wirft Zauber — kohärent, hätte vorhandenen Schiess-Code genutzt; verworfen zugunsten mutigerer Melee-Fantasy), reiner Gun-Slinger (am nächsten am Ist-Zustand, aber verwirft Krieger-Sprite + Schwert-Wunsch).
+
+## 2026-06-24: Projektil-Deflect als Antwort auf Ranged-Gegner
+**Entscheid:** Der Schwung zerschneidet Feind-Projektile im Hitbox-Kegel (statt Ranged-Gegnern das Schiessen zu nehmen).
+**Warum:** Macht aus dem „sie schiessen, ich hab nur ein Schwert"-Problem ein Feature (Sekiro/Metal-Gear-Rising-Deflect). Belohnt Timing und aggressives Reingehen, behält Ranged-Gegner als legitimen Spannungsfaktor für ein Melee-Spiel.
+**Umsetzung:** `MeleeWeapon.update()` nimmt optional `Deflectable[]` (Feind-Bolzen), gleiche Kegel-Prüfung wie Enemy-Hits, deaktiviert getroffene Bolzen + cyan Funken-VFX.
+**Offen:** Deflect-Fenster (~150 ms) ggf. zu eng — Tuning nach Spieler-Feedback (grösseres Fenster oder Turret feuert seltener / stoppt bei Nähe).

@@ -130,6 +130,10 @@ export class BootScene extends Phaser.Scene {
       this.scene.start('TilesetViewer');
       return;
     }
+    if (params.get('scene') === 'melee') {
+      this.scene.start('MeleeTestScene');
+      return;
+    }
     this.scene.start('SplashScene');
   }
 

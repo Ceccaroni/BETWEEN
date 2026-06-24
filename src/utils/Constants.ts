@@ -61,3 +61,23 @@ export const TILE_DISPLAY_SCALE = 2;
 
 /** Effective tile display size in world pixels. */
 export const TILE_DISPLAY = TILE_SIZE * TILE_DISPLAY_SCALE;
+
+// --- Melee combat (Battle-Brawler identity, Hades-style) ---
+
+/** Damage dealt by a single sword swing. */
+export const ATTACK_DAMAGE = 4;
+
+/** Melee reach in pixels (cone radius). */
+export const ATTACK_RANGE = 78;
+
+/** Melee cone width in degrees, centered on the aim angle. */
+export const ATTACK_ARC_DEG = 110;
+
+/** Active hit window of a swing in ms. */
+export const ATTACK_DURATION_MS = 150;
+
+/** Minimum ms between swings (320 ≈ 3 swings/sec). */
+export const ATTACK_COOLDOWN_MS = 320;
+
+/** Forward lunge speed applied on swing start, px/s — commits weight to the hit. */
+export const ATTACK_LUNGE_SPEED = 260;

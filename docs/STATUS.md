@@ -1,7 +1,7 @@
 # STATUS – Between
 
 ## Letzter stabiler Tag
-`v0.4-hero-warrior` — 2026-03-21
+`v0.5-melee` — 2026-06-24
 
 ## Was funktioniert
 - Boot → Splash → Title → Menu Flow mit Artwork
@@ -50,9 +50,13 @@
 - **[NEU] HUD Raum-Counter** — "X/6" oben rechts
 - **[NEU] Victory Scene** — "RUN COMPLETE" nach Raum 6
 - **[NEU] In-Scene Room Cycling** — Persistente Objekte überleben Transitionen
+- **[MELEE] Schwert-Nahkampf** — Linksklick = Schwung-Kegel in Mausrichtung (360°), Lunge, Hitstop, Screenshake, Slash-VFX
+- **[MELEE] Projektil-Deflect** — Schwung zerschneidet Feind-Bolzen im Kegel (cyan Funken)
+- **[MELEE] Schiessen geparkt** — ProjectilePool bleibt verdrahtet, feuert nicht (kommt später als Secondary zurück)
 
 ## Aktives Ticket
-Keins — Freeze-Bugfixes abgeschlossen (2026-03-21)
+Combat-Neuausrichtung → **Melee-Brawler** (Hades-Style). Phase A abgeschlossen (2026-06-24).
+Nächster Schritt: Phase B — Waffen-Aspekte & Boons nach Raum-Clear (Build-Vielfalt).
 
 ## T-006 Fortschritt
 - [x] **Phase 0**: Asset-Vorbereitung + Konstanten
@@ -87,6 +91,14 @@ Keins — Freeze-Bugfixes abgeschlossen (2026-03-21)
 - `src/entities/Enemy.ts` — destroy() Override für Shadow-Cleanup
 - `src/entities/enemies/Turret.ts` — override Keyword für destroy()
 - `src/main.ts` — VictoryScene registriert
+
+## Neue/Geänderte Dateien (Session 2026-06-24, Melee-Pivot)
+- `src/systems/MeleeWeapon.ts` (NEU) — Schwung-System: Kegel-Hitbox, Cooldown, Lunge, Slash-VFX, Projektil-Deflect
+- `src/scenes/MeleeTestScene.ts` (NEU) — isolierte Sandbox für Melee-Feel, erreichbar via `?scene=melee`
+- `src/utils/Constants.ts` — ATTACK_DAMAGE/RANGE/ARC/DURATION/COOLDOWN/LUNGE
+- `src/scenes/GameScene.ts` — Schiessen → Schwert ersetzt, Bewegung/Anim während Schwung gegatet, Deflect verdrahtet
+- `src/scenes/BootScene.ts` — Route `?scene=melee`
+- `src/main.ts` — MeleeTestScene registriert
 
 ## Bekannte Bugs (behoben)
 - **[FIXED] Freeze bei Treffer durch Enemy-Projektil** — Phaser overlap callback argument swap

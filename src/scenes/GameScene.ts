@@ -7,6 +7,8 @@ import { DungeonGenerator, RoomData } from '../systems/DungeonGenerator';
 import { PropManager } from '../systems/PropManager';
 import { ProjectilePool } from '../systems/ProjectilePool';
 import { CombatManager } from '../systems/CombatManager';
+import { MeleeWeapon, Deflectable } from '../systems/MeleeWeapon';
+import { Enemy } from '../entities/Enemy';
 import { RoomClearManager } from '../systems/RoomClearManager';
 import { RunState, WallSide, oppositeSide } from '../systems/RunState';
 import { Crosshair } from '../ui/Crosshair';
@@ -22,6 +24,7 @@ export class GameScene extends Phaser.Scene {
   private inputSystem!: InputSystem;
   private crosshair!: Crosshair;
   private projectilePool!: ProjectilePool;
+  private weapon!: MeleeWeapon;
   private hud!: HUD;
   private runState!: RunState;
   private dustEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -64,6 +67,7 @@ export class GameScene extends Phaser.Scene {
     this.inputSystem = new InputSystem(this);
     this.crosshair = new Crosshair(this);
     this.projectilePool = new ProjectilePool(this);
+    this.weapon = new MeleeWeapon(this, this.player);
     this.hud = new HUD(this);
 
     // Build first room
@@ -81,13 +85,23 @@ export class GameScene extends Phaser.Scene {
     this.player.updateTimers(delta);
 
     const dir = this.inputSystem.getDirection();
-    this.player.move(dir.x, dir.y);
-    this.player.updateAnimation();
 
     // Mouse aiming
     this.crosshair.update();
     const pw = this.crosshair.getWorldPosition();
-    this.player.faceMouse(pw.x, pw.y);
+
+    // Melee attack (hold to chain swings, blocked during dash)
+    if (!this.player.getIsDashing() && this.inputSystem.isFireDown() && this.weapon.canAttack()) {
+      const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pw.x, pw.y);
+      this.weapon.tryAttack(angle);
+    }
+
+    // Movement + facing are suspended during a swing (the lunge drives velocity).
+    if (!this.weapon.isActive()) {
+      this.player.move(dir.x, dir.y);
+      this.player.faceMouse(pw.x, pw.y);
+      this.player.updateAnimation();
+    }
 
     // Dash input
     if (this.inputSystem.isDashPressed()) {
@@ -106,16 +120,11 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // Shooting (blocked during dash)
-    if (!this.player.getIsDashing() && this.inputSystem.isFireDown()) {
-      const origin = this.player.getFireOrigin();
-      const angle = Phaser.Math.Angle.Between(origin.x, origin.y, pw.x, pw.y);
-      if (this.projectilePool.tryFire(origin.x, origin.y, angle)) {
-        this.createMuzzleFlash(origin.x, origin.y);
-        this.cameras.main.shake(50, 0.002);
-      }
-    }
-
+    this.weapon.update(
+      delta,
+      this.combatManager.getEnemyGroup().getChildren() as Enemy[],
+      this.combatManager.getEnemyProjectilePool().getGroup().getChildren() as unknown as Deflectable[]
+    );
     this.projectilePool.update();
     this.combatManager.update(delta);
     this.roomClearManager.update();

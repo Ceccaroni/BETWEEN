@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import type Phaser from 'phaser';
 import { DungeonGenerator, type RoomConfig } from '../DungeonGenerator';
-import { oppositeSide, type WallSide } from '../RunState';
+import type { WallSide } from '../RunState';
 
 // DungeonGenerator uses Phaser only for two pure helpers (Array.Shuffle and
 // Math.Clamp). Mock them so the real (browser-only) engine is never loaded and
@@ -173,7 +173,8 @@ describe('DungeonGenerator procedural rooms are always solvable', () => {
   });
 
   it('keeps every gap reachable and the entrance reachable to the exit, across many seeds', () => {
-    const SEEDS = 200;
+    // 100 seeds × 3 room numbers × 4 exits × 4 entries = 4 800 generated rooms.
+    const SEEDS = 100;
     const ROOM_NUMBERS = [1, 3, 6];
     let roomsChecked = 0;
 
@@ -182,8 +183,15 @@ describe('DungeonGenerator procedural rooms are always solvable', () => {
 
       for (const roomNumber of ROOM_NUMBERS) {
         for (const exitSide of SIDES) {
-          // Room 1 has no entry; later rooms enter opposite their predecessor's exit.
-          for (const entrySide of [null, oppositeSide(exitSide)] as Array<WallSide | null>) {
+          // Mirror production (GameScene.pickExitSide): the exit is any side
+          // other than the entry, so every non-equal entry/exit pairing is
+          // valid — including perpendicular "corner-turning" rooms — plus the
+          // first-room case with no entry (null).
+          const entryOptions: Array<WallSide | null> = [
+            null,
+            ...SIDES.filter((s) => s !== exitSide),
+          ];
+          for (const entrySide of entryOptions) {
             const config: RoomConfig = {
               entrySide,
               exitSide,
@@ -231,8 +239,12 @@ describe('DungeonGenerator procedural rooms are always solvable', () => {
     }
 
     // Guard against the loop silently degenerating to zero iterations.
-    expect(roomsChecked).toBe(SEEDS * ROOM_NUMBERS.length * SIDES.length * 2);
-  });
+    // Per exit: 1 first-room (null entry) + (SIDES.length - 1) non-equal entries.
+    const entriesPerExit = 1 + (SIDES.length - 1);
+    expect(roomsChecked).toBe(
+      SEEDS * ROOM_NUMBERS.length * SIDES.length * entriesPerExit
+    );
+  }, 20000);
 
   it('carves the entry and exit wall gaps (not solid walls)', () => {
     vi.spyOn(Math, 'random').mockImplementation(mulberry32(42));

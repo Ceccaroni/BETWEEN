@@ -115,7 +115,22 @@ Nächster Schritt: Phase C — echte Gegner-Varianten + ein richtiger Boss (dami
 - `src/scenes/MeleeTestScene.ts` — Boon-Test (Taste B) + Live-Stats-Readout
 - `src/main.ts` — BoonSelectScene registriert
 
+## Neue/Geänderte Dateien (Session 2026-09-30, Tests + Refactor)
+- `vitest.config.ts` (NEU) — Vitest-Setup (node-Env), Test-Glob `src/**/*.test.ts`
+- `package.json` — `test`/`test:watch` Scripts, vitest devDependency
+- `src/systems/__tests__/` (NEU) — Unit-Tests: RunState, DungeonGenerator (Solvability-Property-Test), Boon, CombatStats, WaveSpawn
+- `src/systems/WaveSpawn.ts` (NEU) — reine Wave-/Spawn-Logik (testbar), verhindert Spawns in Hindernissen
+- `src/effects/Impact.ts` (NEU) — geteilter Wall-Impact-VFX (vorher dupliziert)
+- `src/effects/Atmosphere.ts` (NEU) — Dust/Ambient/Vignette-Factories (aus GameScene ausgelagert)
+- `src/ui/RoomBanners.ts` (NEU) — Room-Indicator + Boon-Toast (aus GameScene ausgelagert)
+- `src/systems/RoomBuilder.ts` (NEU) — baut/räumt konkrete Raum-Objekte (RoomState)
+- `src/systems/RoomDirector.ts` (NEU) — Raum-Lifecycle-Orchestrierung + Transition + Boon-Offer
+- `src/scenes/GameScene.ts` — auf 138 Zeilen verschlankt (Lifecycle → RoomDirector), erfüllt die 200-Zeilen-Regel
+- `src/systems/CombatManager.ts` — nutzt WaveSpawn + geteilten Impact-VFX, toter Code entfernt
+- `src/entities/Player.ts` — toter `getFireOrigin()` entfernt
+
 ## Bekannte Bugs (behoben)
+- **[FIXED] Gegner spawnen in Säulen/Hindernissen** — Spawn prüft jetzt die Wall-Tiles (CombatManager/WaveSpawn), mit garantiertem In-Bounds-Fallback
 - **[FIXED] Freeze bei Treffer durch Enemy-Projektil** — Phaser overlap callback argument swap
 - **[FIXED] timeScale-Freeze bei Enemy-Tod** — window.setTimeout statt delayedCall
 - **[FIXED] Freeze: Player-Tod Re-Hit** — playerDead-Flag verhindert doppelten scene.start()

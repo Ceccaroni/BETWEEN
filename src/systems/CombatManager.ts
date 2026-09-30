@@ -15,6 +15,7 @@ import {
   TILE_DISPLAY,
 } from '../utils/Constants';
 import { getWaveConfig, planSpawnPoint } from './WaveSpawn';
+import { spawnWallImpact } from '../effects/Impact';
 
 /** Knockback speed applied to player on contact damage. */
 const PLAYER_HIT_KNOCKBACK = 180;
@@ -89,7 +90,7 @@ export class CombatManager {
           if (!proj.active || !enemy.active) return;
 
           enemy.takeDamage(PROJECTILE_DAMAGE, proj.x, proj.y);
-          this.spawnWallImpact(proj.x, proj.y);
+          spawnWallImpact(this.scene, proj.x, proj.y);
           proj.deactivate();
         }
       )
@@ -139,7 +140,7 @@ export class CombatManager {
         this.wallLayer,
         (projObj) => {
           const proj = projObj as Projectile;
-          this.spawnWallImpact(proj.x, proj.y);
+          spawnWallImpact(this.scene, proj.x, proj.y);
           proj.deactivate();
         }
       )
@@ -307,26 +308,5 @@ export class CombatManager {
       collider.destroy();
     }
     this.colliders = [];
-  }
-
-  /** Spark particles at impact point. */
-  private spawnWallImpact(x: number, y: number): void {
-    for (let i = 0; i < 4; i++) {
-      const spark = this.scene.add.circle(
-        x, y, Phaser.Math.Between(2, 4), 0xffcc44, 1
-      );
-      spark.setDepth(20);
-      this.scene.tweens.add({
-        targets: spark,
-        x: x + Phaser.Math.Between(-20, 20),
-        y: y + Phaser.Math.Between(-20, 20),
-        alpha: 0,
-        scale: 0,
-        duration: Phaser.Math.Between(100, 200),
-        onComplete: () => {
-          if (spark && spark.scene) spark.destroy();
-        },
-      });
-    }
   }
 }

@@ -15,6 +15,7 @@ import { RunState, WallSide, oppositeSide } from '../systems/RunState';
 import { Crosshair } from '../ui/Crosshair';
 import { HUD } from '../ui/HUD';
 import { createAfterimage } from '../effects/Afterimage';
+import { spawnWallImpact } from '../effects/Impact';
 import { TILE_DISPLAY, ROOM_W_TILES, ROOM_H_TILES } from '../utils/Constants';
 
 /** Main gameplay scene: room lifecycle, player, combat, transitions. */
@@ -184,7 +185,7 @@ export class GameScene extends Phaser.Scene {
         this.room.wallLayer,
         (_proj) => {
           const p = _proj as Projectile;
-          this.spawnWallImpact(p.x, p.y);
+          spawnWallImpact(this, p.x, p.y);
           p.deactivate();
         }
       )
@@ -412,42 +413,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   // ========== VFX HELPERS ==========
-
-  /** Brief white flash at the fire origin. */
-  private createMuzzleFlash(x: number, y: number): void {
-    const flash = this.add.circle(x, y, 8, 0xffffff, 0.85);
-    flash.setDepth(20);
-    this.tweens.add({
-      targets: flash,
-      alpha: 0,
-      scale: 1.5,
-      duration: 80,
-      onComplete: () => {
-        if (flash && flash.scene) flash.destroy();
-      },
-    });
-  }
-
-  /** Spark particles when a projectile hits a wall. */
-  private spawnWallImpact(x: number, y: number): void {
-    for (let i = 0; i < 4; i++) {
-      const spark = this.add.circle(
-        x, y, Phaser.Math.Between(2, 4), 0xffcc44, 1
-      );
-      spark.setDepth(20);
-      this.tweens.add({
-        targets: spark,
-        x: x + Phaser.Math.Between(-20, 20),
-        y: y + Phaser.Math.Between(-20, 20),
-        alpha: 0,
-        scale: 0,
-        duration: Phaser.Math.Between(100, 200),
-        onComplete: () => {
-          if (spark && spark.scene) spark.destroy();
-        },
-      });
-    }
-  }
 
   /** Creates the persistent dust particle emitter. */
   private createDustEmitter(): void {

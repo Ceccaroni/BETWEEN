@@ -92,12 +92,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(worldX < this.x);
   }
 
-  /** Returns the muzzle point slightly in front of the player. */
-  getFireOrigin(): { x: number; y: number } {
-    const offsetX = this.flipX ? -18 : 18;
-    return { x: this.x + offsetX, y: this.y + 4 };
-  }
-
   /** Moves the player with normalized diagonal speed. */
   move(dirX: number, dirY: number): void {
     if (this.isDashing) return; // Dash overrides movement

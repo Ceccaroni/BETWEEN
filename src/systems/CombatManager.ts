@@ -6,20 +6,24 @@ import { Turret } from '../entities/enemies/Turret';
 import { Projectile } from '../entities/Projectile';
 import { ProjectilePool } from './ProjectilePool';
 import { EnemyProjectilePool } from './EnemyProjectilePool';
-import { PLAYER_HP, PROJECTILE_DAMAGE, ENEMY_PROJECTILE_DAMAGE } from '../utils/Constants';
+import {
+  PLAYER_HP,
+  PROJECTILE_DAMAGE,
+  ENEMY_PROJECTILE_DAMAGE,
+  ROOM_W_TILES,
+  ROOM_H_TILES,
+  TILE_DISPLAY,
+} from '../utils/Constants';
+import { getWaveConfig, planSpawnPoint } from './WaveSpawn';
 
 /** Knockback speed applied to player on contact damage. */
 const PLAYER_HIT_KNOCKBACK = 180;
 
-/** Enemy wave config per room number. */
-const WAVE_CONFIG: Record<number, { drones: number; turrets: number }> = {
-  1: { drones: 3, turrets: 1 },
-  2: { drones: 4, turrets: 2 },
-  3: { drones: 5, turrets: 2 },
-  4: { drones: 5, turrets: 3 },
-  5: { drones: 6, turrets: 3 },
-  6: { drones: 8, turrets: 4 },
-};
+/** Keep spawns this far from the room edge (avoids the perimeter walls). */
+const SPAWN_MARGIN = 128;
+
+/** Keep freshly spawned enemies at least this far from the player. */
+const SPAWN_PLAYER_CLEARANCE = 150;
 
 /**
  * Central combat system — manages enemy spawning, collision wiring,
@@ -209,38 +213,42 @@ export class CombatManager {
 
   /** Spawns an enemy wave scaled to the given room number. */
   spawnWave(roomNumber: number): void {
-    const config = WAVE_CONFIG[roomNumber] ?? { drones: 3, turrets: 2 };
-    const margin = 128;
-    const roomW = 20 * 64;
-    const roomH = 11 * 64;
+    const config = getWaveConfig(roomNumber);
 
     for (let i = 0; i < config.drones; i++) {
-      const pos = this.getSafeSpawn(margin, roomW, roomH);
+      const pos = this.pickSpawn();
       this.spawnDrone(pos.x, pos.y);
     }
     for (let i = 0; i < config.turrets; i++) {
-      const pos = this.getSafeSpawn(margin, roomW, roomH);
+      const pos = this.pickSpawn();
       this.spawnTurret(pos.x, pos.y);
     }
   }
 
-  /** Spawns the initial wave (legacy, calls spawnWave(1)). */
-  spawnInitialWave(): void {
-    this.spawnWave(1);
-  }
-
-  /** Returns a spawn position that isn't too close to the player. */
-  private getSafeSpawn(margin: number, roomW: number, roomH: number): { x: number; y: number } {
-    let x = Phaser.Math.Between(margin, roomW - margin);
-    let y = Phaser.Math.Between(margin, roomH - margin);
-
-    const dist = Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y);
-    if (dist < 150) {
-      const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, x, y);
-      x = this.player.x + Math.cos(angle) * 200;
-      y = this.player.y + Math.sin(angle) * 200;
-    }
-    return { x, y };
+  /**
+   * Returns a spawn position clear of walls/obstacles and not too close to the
+   * player. Rejecting blocked tiles keeps enemies (especially stationary
+   * turrets) from spawning inside procedural pillars.
+   */
+  private pickSpawn(): { x: number; y: number } {
+    const roomW = ROOM_W_TILES * TILE_DISPLAY;
+    const roomH = ROOM_H_TILES * TILE_DISPLAY;
+    return planSpawnPoint({
+      bounds: {
+        minX: SPAWN_MARGIN,
+        maxX: roomW - SPAWN_MARGIN,
+        minY: SPAWN_MARGIN,
+        maxY: roomH - SPAWN_MARGIN,
+      },
+      isBlocked: (x, y) => {
+        const tile = this.wallLayer.getTileAtWorldXY(x, y);
+        return tile !== null && tile.index !== -1;
+      },
+      playerX: this.player.x,
+      playerY: this.player.y,
+      minPlayerDist: SPAWN_PLAYER_CLEARANCE,
+      rng: () => Math.random(),
+    });
   }
 
   /** Must be called every frame from scene update. */
